@@ -118,7 +118,7 @@ verificationForm.append(
       setLoading(true);
 
       const { data } = await axios.post(
-        "http://localhost:5000/v1/api/business-verification/submit",
+        "https://api.thover.in/v1/api/business-verification/submit",
         verificationForm,
         {
           headers: {

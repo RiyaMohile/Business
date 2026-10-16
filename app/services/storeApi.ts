@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:5000/v1/api";
+const BASE_URL = "https://api.thover.in/v1/api";
 
 export const updateStore = async (
   storeId: string,
@@ -75,7 +75,7 @@ export const updateStoreOnlineStatus = async (
     }
 
     const { data } = await axios.patch(
-      `http://localhost:5000/v1/api/store/${storeId}/online-status`,
+      `https://api.thover.in/v1/api/store/${storeId}/online-status`,
       {
         isOnline,
       },
@@ -151,7 +151,7 @@ export const getMyStore = async () => {
   const token = localStorage.getItem("token");
 
   const { data } = await axios.get(
-    "http://localhost:5000/v1/api/store/my-store",
+    "https://api.thover.in/v1/api/store/my-store",
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -175,7 +175,7 @@ export const getMyStores = async () => {
     }
 
     const { data } = await axios.get(
-      "http://localhost:5000/v2/api/store/my-stores",
+      "https://api.thover.in/v2/api/store/my-stores",
       {
         headers: {
           Authorization: `Bearer ${token}`,

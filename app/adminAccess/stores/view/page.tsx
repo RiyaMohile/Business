@@ -57,7 +57,7 @@ console.log(
 );
 
 const { data } = await api.get(
-  `http://localhost:5000/v1/api/store/my-store`
+  `https://api.thover.in/v1/api/store/my-store`
 );
 
         console.log(

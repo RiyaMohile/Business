@@ -51,7 +51,7 @@ export default function ProductList({
       }
 
       const response = await axios.get(
-        `http://localhost:5000/v1/api/post/user/${userId}/posts`,
+        `https://api.thover.in/v1/api/post/user/${userId}/posts`,
         {
           params: {
             page: 1,

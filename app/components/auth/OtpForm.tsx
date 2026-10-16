@@ -183,7 +183,7 @@ export default function OtpForm() {
     setLoading(true);
 
     const response = await api.post(
-      "http://localhost:5000/v2/api/auth/phone/login-user-otp",
+      "https://api.thover.in/v2/api/auth/phone/login-user-otp",
       {
         requestId,
         otp,

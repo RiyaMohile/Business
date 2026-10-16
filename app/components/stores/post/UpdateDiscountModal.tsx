@@ -136,7 +136,7 @@ export default function UpdateDiscountModal({
       );
 
       const { data } = await axios.patch(
-        `http://localhost:5000/v1/api/post/update-discount/${post._id}`,
+        `https://api.thover.in/v1/api/post/update-discount/${post._id}`,
         payload,
         {
           headers: {

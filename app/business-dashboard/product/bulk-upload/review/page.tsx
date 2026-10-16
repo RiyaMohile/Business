@@ -10,7 +10,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const API_URL = "http://localhost:5000/v1/api";
+const API_URL = "https://api.thover.in/v1/api";
 
 const DB_NAME = "thoverBulkUpload";
 const STORE_NAME = "images";
@@ -307,7 +307,7 @@ for (let i = 0; i < posts.length; i++) {
 }
 
 const response = await axios.post(
-  "http://localhost:5000/v2/api/post/bulk-create",
+  "https://api.thover.in/v2/api/post/bulk-create",
   formData,
   {
     headers: {

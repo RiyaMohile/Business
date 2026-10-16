@@ -48,7 +48,7 @@ export default function WithdrawalPage() {
       setLoading(true);
 
       const { data } = await api.get(
-        "http://localhost:5000/v1/api/withdrawal/admin/pending"
+        "https://api.thover.in/v1/api/withdrawal/admin/pending"
       );
 
       console.log(data.withdrawals);
@@ -68,7 +68,7 @@ export default function WithdrawalPage() {
         window.prompt("Enter remark (optional):") || "";
 
       await api.patch(
-        `http://localhost:5000/v1/api/withdrawal/admin/${withdrawalId}/complete`,
+        `https://api.thover.in/v1/api/withdrawal/admin/${withdrawalId}/complete`,
         {
           remark,
         }

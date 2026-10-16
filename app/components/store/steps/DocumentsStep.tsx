@@ -102,7 +102,7 @@ export default function DocumentsStep({
     console.log("STORE PAYLOAD:", storePayload);
 
     const storeResponse = await axios.post(
-      "http://localhost:5000/v1/api/store/create",
+      "https://api.thover.in/v1/api/store/create",
       storePayload,
       {
         headers: {
@@ -130,7 +130,7 @@ export default function DocumentsStep({
     // Fallback
     if (!storeId) {
       const myStoreResponse = await axios.get(
-        "http://localhost:5000/v1/api/store/my-store",
+        "https://api.thover.in/v1/api/store/my-store",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -224,7 +224,7 @@ export default function DocumentsStep({
 
     const verificationResponse =
       await axios.post(
-        "http://localhost:5000/v1/api/business-verification/submit",
+        "https://api.thover.in/v1/api/business-verification/submit",
         verificationForm,
         {
           headers: {

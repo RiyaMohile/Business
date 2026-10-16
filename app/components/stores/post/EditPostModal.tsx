@@ -90,7 +90,7 @@ export default function EditPostModal({
       console.log("UPDATE POST PAYLOAD:", payload);
 
       const { data } = await axios.patch(
-        `http://localhost:5000/v1/api/post/update-post/${post._id}`,
+        `https://api.thover.in/v1/api/post/update-post/${post._id}`,
         payload,
         {
           headers: {

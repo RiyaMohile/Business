@@ -53,7 +53,7 @@ const router = useRouter();
       setLoading(true);
 
       const { data } = await axios.get(
-  "http://localhost:5000/v1/api/vibe/get-vibes?page=1&limit=100",
+  "https://api.thover.in/v1/api/vibe/get-vibes?page=1&limit=100",
   {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -77,7 +77,7 @@ setFiltered(data.data);
     const token = localStorage.getItem("token");
 
     await axios.delete(
-      `http://localhost:5000/v1/api/admin/admin-delete-vibes/${selectedVibe._id}`,
+      `https://api.thover.in/v1/api/admin/admin-delete-vibes/${selectedVibe._id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

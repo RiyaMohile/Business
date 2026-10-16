@@ -89,7 +89,7 @@ const [activationError, setActivationError] = useState("");
       setError("");
 
       const response = await api.get(
-        "http://localhost:5000/v2/api/plans/active"
+        "https://api.thover.in/v2/api/plans/active"
       );
 
       if (response.data?.success) {
@@ -127,7 +127,7 @@ const [activationError, setActivationError] = useState("");
     setActivationError("");
 
     const response = await api.get(
-      "http://localhost:5000/v1/api/admin-access/all-stores"
+      "https://api.thover.in/v1/api/admin-access/all-stores"
     );
 
     if (response.data?.success) {
@@ -171,7 +171,7 @@ const handleActivatePlan = async () => {
     setActivating(true);
 
     const response = await api.post(
-      `http://localhost:5000/v2/api/plans/${selectedStoreId}/activate`,
+      `https://api.thover.in/v2/api/plans/${selectedStoreId}/activate`,
       {
         planId: selectedPlanId,
       }
@@ -275,7 +275,7 @@ if (
       setCreating(true);
 
       const response = await api.post(
-  "http://localhost:5000/v2/api/plans/",
+  "https://api.thover.in/v2/api/plans/",
   {
     name: form.name.trim(),
 
