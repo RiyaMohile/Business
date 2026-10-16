@@ -4,7 +4,6 @@ import {
   Home,
   Package,
   ShoppingBag,
-  Wallet,
   ReceiptText,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -16,9 +15,10 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
 
   const [isManager, setIsManager] = useState(false);
+  const [hasStore, setHasStore] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkManager = async () => {
+    const checkStoreAndRole = async () => {
       try {
         const selectedStoreId =
           localStorage.getItem("selectedStoreId");
@@ -26,7 +26,8 @@ export default function DashboardSidebar() {
         const userData =
           localStorage.getItem("user");
 
-        if (!selectedStoreId || !userData) {
+        if (!userData) {
+          setHasStore(false);
           setIsManager(false);
           return;
         }
@@ -35,18 +36,50 @@ export default function DashboardSidebar() {
 
         const response = await getMyStores();
 
+        // API response check
         if (
           !response?.success ||
           !Array.isArray(response?.stores)
         ) {
+          setHasStore(false);
           setIsManager(false);
           return;
         }
 
-        // Selected store find karo
-        const selectedStore = response.stores.find(
+        // =====================================
+        // CHECK USER HAS ANY STORE OR NOT
+        // =====================================
+
+        const stores = response.stores;
+
+        if (stores.length === 0) {
+          // User ke paas koi store nahi hai
+          setHasStore(false);
+          setIsManager(false);
+
+          console.log("SIDEBAR: User has NO store");
+
+          return;
+        }
+
+        // User ke paas kam se kam 1 store hai
+        setHasStore(true);
+
+        console.log("SIDEBAR: User has store", stores);
+
+        // =====================================
+        // CHECK MANAGER ROLE
+        // =====================================
+
+        if (!selectedStoreId) {
+          setIsManager(false);
+          return;
+        }
+
+        const selectedStore = stores.find(
           (store: any) =>
-            store._id === selectedStoreId
+            store._id?.toString() ===
+            selectedStoreId?.toString()
         );
 
         if (!selectedStore) {
@@ -54,7 +87,6 @@ export default function DashboardSidebar() {
           return;
         }
 
-        // Current user ka selected store mein member record
         const member = selectedStore.users?.find(
           (item: any) => {
             const memberUserId =
@@ -78,25 +110,27 @@ export default function DashboardSidebar() {
         console.log("SIDEBAR ROLE CHECK:", {
           selectedStoreId,
           userId: user?._id,
+          selectedStore,
           member,
           role: member?.role,
           isManager: manager,
         });
+
       } catch (error) {
         console.error(
-          "SIDEBAR ROLE CHECK ERROR:",
+          "SIDEBAR CHECK ERROR:",
           error
         );
 
+        setHasStore(false);
         setIsManager(false);
       }
     };
 
-    checkManager();
+    checkStoreAndRole();
 
-    // Store change hone par role dobara check karo
     const handleStoreChanged = () => {
-      checkManager();
+      checkStoreAndRole();
     };
 
     window.addEventListener(
@@ -129,11 +163,23 @@ export default function DashboardSidebar() {
       path: "/business-dashboard/order",
     },
     {
-    label: "Bill",
-    icon: ReceiptText,
-    path: "/business-dashboard/bill",
-  },
+      label: "Bill",
+      icon: ReceiptText,
+      path: "/business-dashboard/bill",
+    },
   ];
+
+  // =====================================
+  // NO STORE → NO SIDEBAR
+  // =====================================
+
+  if (hasStore !== true) {
+    return null;
+  }
+
+  // =====================================
+  // HAS STORE → SHOW SIDEBAR
+  // =====================================
 
   return (
     <aside

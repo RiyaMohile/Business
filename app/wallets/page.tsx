@@ -36,7 +36,7 @@ const giveCoins = async () => {
     const token = localStorage.getItem("token");
 
     await axios.post(
-      "https://api.thover.in/v1/api/admin/admin-give",
+      "http://localhost:5000/v1/api/admin/admin-give",
       {
         walletId: selectedWallet._id,
         coins: Number(coinAmount),
@@ -69,7 +69,7 @@ const takeCoins = async () => {
     const token = localStorage.getItem("token");
 
     await axios.post(
-      "https://api.thover.in/v1/api/admin/admin-take",
+      "http://localhost:5000/v1/api/admin/admin-take",
       {
         walletId: selectedWallet._id,
         coins: Number(coinAmount),
@@ -101,7 +101,7 @@ const takeCoins = async () => {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.get(
-        `https://api.thover.in/v1/api/admin/search-wallet?walletName=${walletName}`,
+        `http://localhost:5000/v1/api/admin/search-wallet?walletName=${walletName}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

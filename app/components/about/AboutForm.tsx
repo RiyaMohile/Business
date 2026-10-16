@@ -43,7 +43,7 @@ const createPage = async () => {
     const token = localStorage.getItem("token");
 
     const { data } = await axios.post(
-      "https://api.thover.in/v1/api/about/add",
+      "http://localhost:5000/v1/api/about/add",
       {
         name: form.name,
         heading: form.heading,
@@ -73,7 +73,7 @@ const fetchPage = async () => {
     const token = localStorage.getItem("token");
 
     const { data } = await axios.get(
-      `https://api.thover.in/v1/api/about/${pageId}`,
+      `http://localhost:5000/v1/api/about/${pageId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -103,7 +103,7 @@ const updatePage = async () => {
     const token = localStorage.getItem("token");
 
     const { data } = await axios.put(
-      `https://api.thover.in/v1/api/about/update/${pageId}`,
+      `http://localhost:5000/v1/api/about/update/${pageId}`,
       form,
       {
         headers: {

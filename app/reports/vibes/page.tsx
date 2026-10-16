@@ -35,7 +35,7 @@ export default function VibeReportsPage() {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.get(
-        "https://api.thover.in/v1/api/admin/reports/vibes",
+        "http://localhost:5000/v1/api/admin/reports/vibes",
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { ArrowLeft, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  ShoppingCart,
+  RefreshCw,
+} from "lucide-react";
+
+const API_URL = "http://localhost:5000/v1/api";
 
 const DB_NAME = "thoverBulkUpload";
 const STORE_NAME = "images";
@@ -67,6 +74,8 @@ export default function BulkUploadReviewPage() {
 const [loading, setLoading] = useState(false);
 const [uploadProgress, setUploadProgress] = useState(0);
 const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
+const [uploadedPostCount, setUploadedPostCount] = useState(0);
+const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const storedPosts =
@@ -84,6 +93,7 @@ const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
 
   useEffect(() => {
   if (posts.length === 0) return;
+  
 
   const loadImages = async () => {
     const urls: Record<number, string> = {};
@@ -107,6 +117,48 @@ const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
     });
   };
 }, [posts]);
+
+useEffect(() => {
+  fetchUploadedPostCount();
+}, []);
+
+const handleRefresh = async () => {
+  try {
+    setIsRefreshing(true);
+
+    await fetchUploadedPostCount();
+
+    // thoda time icon ko visible rakhe
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  } finally {
+    setIsRefreshing(false);
+  }
+};
+
+const fetchUploadedPostCount = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) return;
+
+    const response = await axios.get(
+      `${API_URL}/post/user/${userId}/posts?page=1&limit=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const totalCount =
+      response.data?.data?.pagination?.totalCount || 0;
+
+    setUploadedPostCount(totalCount);
+  } catch (error) {
+    console.error("Failed to fetch uploaded post count:", error);
+  }
+};
+
 
   const handleUpload = async () => {
   try {
@@ -255,7 +307,7 @@ for (let i = 0; i < posts.length; i++) {
 }
 
 const response = await axios.post(
-  "https://api.thover.in/v2/api/post/bulk-create",
+  "http://localhost:5000/v2/api/post/bulk-create",
   formData,
   {
     headers: {
@@ -357,6 +409,43 @@ const response = await axios.post(
             </p>
           </div>
         </div>
+
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+  <div className="flex items-center justify-between gap-4">
+
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+        <ShoppingCart size={22} />
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-slate-900">
+          Products Added
+        </p>
+
+        <p className="text-xs text-slate-500">
+          {uploadedPostCount}{" "}
+          {uploadedPostCount === 1 ? "product" : "products"} already uploaded
+        </p>
+      </div>
+    </div>
+
+   <button
+  type="button"
+  onClick={handleRefresh}
+  disabled={isRefreshing}
+  className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+>
+  <RefreshCw
+    size={17}
+    className={isRefreshing ? "animate-spin" : ""}
+  />
+
+  {isRefreshing ? "Refreshing..." : "Refresh"}
+</button>
+
+  </div>
+</div>
 
         <div className="space-y-4">
 

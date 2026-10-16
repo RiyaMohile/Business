@@ -5,6 +5,7 @@ import axios from "axios";
 import {
   Package,
   Search,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getStoreProducts } from "../../services/productApi";
@@ -84,6 +85,8 @@ export default function ProductsPage() {
   const [loadingUser, setLoadingUser] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] =
   useState<any | null>(null);
 
@@ -207,7 +210,7 @@ useEffect(() => {
       }
 
       const { data } = await axios.get(
-        "https://api.thover.in/v1/api/auth/me",
+        "http://localhost:5000/v1/api/auth/me",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -486,6 +489,184 @@ const endProduct = Math.min(
 );
 
 
+const handleSelectProduct = (productId: string) => {
+  setSelectedProductIds((prev) =>
+    prev.includes(productId)
+      ? prev.filter((id) => id !== productId)
+      : [...prev, productId]
+  );
+};
+
+const handleSelectAll = () => {
+  const currentIds = paginatedProducts.map(
+    (product) => product._id
+  );
+
+  const allSelected = currentIds.every((id) =>
+    selectedProductIds.includes(id)
+  );
+
+  if (allSelected) {
+    setSelectedProductIds((prev) =>
+      prev.filter((id) => !currentIds.includes(id))
+    );
+  } else {
+    setSelectedProductIds((prev) => [
+      ...new Set([...prev, ...currentIds]),
+    ]);
+  }
+};
+
+const isAllSelected =
+  paginatedProducts.length > 0 &&
+  paginatedProducts.every((product) =>
+    selectedProductIds.includes(product._id)
+  );
+
+
+  const handleBulkArchive = async () => {
+  if (selectedProductIds.length === 0) {
+    return;
+  }
+
+  const action =
+    activeTab === "Active"
+      ? "archive"
+      : "unarchive";
+
+  const confirmed = window.confirm(
+    `Are you sure you want to ${action} ${selectedProductIds.length} product${
+      selectedProductIds.length > 1 ? "s" : ""
+    }?`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setBulkActionLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login again.");
+      return;
+    }
+
+    const response = await axios.patch(
+  "http://localhost:5000/v2/api/post/bulk-archive",
+  {
+    postIds: selectedProductIds,
+    isArchived: activeTab === "Active",
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
+    if (response.data?.success) {
+      alert(
+        activeTab === "Active"
+          ? "Products archived successfully."
+          : "Products unarchived successfully."
+      );
+
+      setSelectedProductIds([]);
+
+      await fetchProducts();
+    } else {
+      alert(
+        response.data?.message ||
+          "Unable to update products."
+      );
+    }
+  } catch (error: any) {
+    console.error(
+      "BULK ARCHIVE ERROR:",
+      error.response?.data || error.message
+    );
+
+    alert(
+      error.response?.data?.message ||
+        "Unable to update products."
+    );
+  } finally {
+    setBulkActionLoading(false);
+  }
+};
+
+const handleBulkDelete = async () => {
+  if (selectedProductIds.length === 0) {
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Are you sure you want to permanently delete ${
+      selectedProductIds.length
+    } product${
+      selectedProductIds.length > 1 ? "s" : ""
+    }? This action cannot be undone.`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setBulkActionLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login again.");
+      return;
+    }
+
+    const response = await axios.delete(
+      "http://localhost:5000/v2/api/post/bulk-delete",
+      {
+        data: {
+          postIds: selectedProductIds,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.data?.success) {
+      alert(
+        response.data?.message ||
+          "Products deleted successfully."
+      );
+
+      setSelectedProductIds([]);
+
+      await fetchProducts();
+    } else {
+      alert(
+        response.data?.message ||
+          "Unable to delete products."
+      );
+    }
+  } catch (error: any) {
+    console.error(
+      "BULK DELETE ERROR:",
+      error.response?.data ||
+        error.message
+    );
+
+    alert(
+      error.response?.data?.message ||
+        "Unable to delete products."
+    );
+  } finally {
+    setBulkActionLoading(false);
+  }
+};
 
 const handleOpenActions = (product: Product) => {
   setSelectedProduct(product);
@@ -717,10 +898,11 @@ const handleOpenActions = (product: Product) => {
             <button
               key={tab}
               type="button"
-              onClick={() =>{
-                setActiveTab(tab)
-                 setCurrentPage(1);
-              }}
+              onClick={() => {
+  setActiveTab(tab);
+  setCurrentPage(1);
+  setSelectedProductIds([]);
+}}
               className={`
                 rounded-lg
                 border
@@ -741,6 +923,77 @@ const handleOpenActions = (product: Product) => {
           ))}
         </div>
 
+        {selectedProductIds.length > 0 && (
+  <div className="mt-4 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+
+    <p className="text-sm font-medium text-blue-700">
+      {selectedProductIds.length}{" "}
+      {selectedProductIds.length === 1
+        ? "product"
+        : "products"}{" "}
+      selected
+    </p>
+
+    <div className="flex items-center gap-2">
+
+      {/* ARCHIVE / UNARCHIVE */}
+      <button
+        type="button"
+        onClick={handleBulkArchive}
+        disabled={bulkActionLoading}
+        className="
+          rounded-lg
+          bg-blue-600
+          px-4
+          py-2
+          text-sm
+          font-semibold
+          text-white
+          transition
+          hover:bg-blue-700
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+        "
+      >
+        {bulkActionLoading
+          ? "Processing..."
+          : activeTab === "Active"
+          ? "Archive Selected"
+          : "Unarchive Selected"}
+      </button>
+
+      {/* DELETE */}
+      <button
+        type="button"
+        onClick={handleBulkDelete}
+        disabled={bulkActionLoading}
+        className="
+          flex
+          items-center
+          gap-2
+          rounded-lg
+          bg-red-600
+          px-4
+          py-2
+          text-sm
+          font-semibold
+          text-white
+          transition
+          hover:bg-red-700
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+        "
+      >
+        <Trash2 size={16} />
+
+        {bulkActionLoading
+          ? "Processing..."
+          : "Delete Selected"}
+      </button>
+
+    </div>
+  </div>
+)}
         {/* =================================================
     PRODUCTS
 ================================================= */}
@@ -978,35 +1231,37 @@ const handleOpenActions = (product: Product) => {
         {/* TABLE HEADER */}
 
         <div
-          className="
-            grid
-            grid-cols-[minmax(200px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
-            items-center
-            gap-4
-            border-b
-            border-slate-200
-            bg-slate-50/70
-            px-5
-            py-4
-            text-sm
-            font-semibold
-            text-slate-600
-          "
-        >
+  className="
+    grid
+    grid-cols-[40px_minmax(200px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
+    items-center
+    gap-4
+    border-b
+    border-slate-200
+    bg-slate-50/70
+    px-5
+    py-4
+    text-sm
+    font-semibold
+    text-slate-600
+  "
+>
+
+  <div className="flex justify-center">
+  <input
+    type="checkbox"
+    checked={isAllSelected}
+    onChange={handleSelectAll}
+    className="h-4 w-4 cursor-pointer accent-blue-600"
+  />
+</div>
 
           <span>Product</span>
-
-          <span>Category</span>
-
-          <span>Price</span>
-
-          <span>Stock</span>
-
-          <span>Status</span>
-
-          <span className="text-center">
-            Actions
-          </span>
+<span>Category</span>
+<span>Price</span>
+<span>Stock</span>
+<span>Status</span>
+<span className="text-center">Actions</span>
         </div>
 
         {/* DESKTOP PRODUCT ROWS */}
@@ -1028,7 +1283,7 @@ const handleOpenActions = (product: Product) => {
               key={post._id}
               className="
                 grid
-                grid-cols-[minmax(200px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
+                grid-cols-[40px_minmax(200px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
                 items-center
                 gap-4
                 border-b
@@ -1039,6 +1294,17 @@ const handleOpenActions = (product: Product) => {
                 hover:bg-slate-50/50
               "
             >
+              <div className="flex justify-center">
+  <input
+    type="checkbox"
+    checked={selectedProductIds.includes(post._id)}
+    onChange={() =>
+      handleSelectProduct(post._id)
+    }
+    onClick={(e) => e.stopPropagation()}
+    className="h-4 w-4 cursor-pointer accent-blue-600"
+  />
+</div>
 
               {/* PRODUCT */}
 
@@ -1376,6 +1642,21 @@ const handleOpenActions = (product: Product) => {
       setEditingPost(selectedProduct);
       setSelectedProduct(null);
     }}
+    onAddSimilarProducts={() => {
+  if (!selectedProduct?._id) {
+    alert("Product ID not found.");
+    return;
+  }
+
+  sessionStorage.setItem(
+  "similarProductsMainId",
+  selectedProduct._id
+);
+
+router.push(
+  "/business-dashboard/product/similar-products"
+);
+}}
 
     onUpdateDiscount={() => {
       setDiscountProduct(selectedProduct);

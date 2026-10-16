@@ -140,7 +140,7 @@ export default function Navbar({
       }
 
       const { data } = await axios.get(
-        "https://api.thover.in/v1/api/auth/me",
+        "http://localhost:5000/v1/api/auth/me",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -398,7 +398,7 @@ export default function Navbar({
     setEditLoading(true);
 
     const response = await axios.put(
-      "https://api.thover.in/v1/api/user/complete-profile",
+      "http://localhost:5000/v1/api/user/complete-profile",
       {
         name: editName.trim(),
         username: editUsername.trim(),
@@ -454,7 +454,7 @@ export default function Navbar({
       }
 
       const { data } = await axios.get(
-        `https://api.thover.in/v1/api/user/details/${user._id}`,
+        `http://localhost:5000/v1/api/user/details/${user._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -716,65 +716,63 @@ export default function Navbar({
         <div className="ml-auto hidden items-center gap-4 lg:flex">
 
           {/* =================================================
-        STORE
-    ================================================= */}
-          <div className="relative">
+  STORE
+================================================= */}
+{stores.length > 0 && (
+  <div className="relative">
 
-            <button
-              type="button"
-              onClick={() => {
-                setStoreDropdownOpen((prev) => !prev);
+    <button
+      type="button"
+      onClick={() => {
+        setStoreDropdownOpen((prev) => !prev);
 
-                if (!storeDropdownOpen) {
-                  const savedStoreId =
-                    localStorage.getItem("selectedStoreId");
+        if (!storeDropdownOpen) {
+          const savedStoreId =
+            localStorage.getItem("selectedStoreId");
 
-                  fetchAllStores(savedStoreId || undefined);
-                }
-              }}
-              className="
-          flex
-          h-12
-          min-w-[175px]
-          items-center
-          justify-between
-          gap-3
-          rounded-xl
-          border
-          border-slate-200
-          bg-white
-          px-4
-          text-sm
-          font-medium
-          text-slate-800
-          shadow-sm
-          transition
-          cursor-pointer
-        "
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <Store
-                  size={20}
-                  className="shrink-0 text-violet-600"
-                />
+          fetchAllStores(savedStoreId || undefined);
+        }
+      }}
+      className="
+        flex
+        h-12
+        min-w-[175px]
+        items-center
+        justify-between
+        gap-3
+        rounded-xl
+        border
+        border-slate-200
+        bg-white
+        px-4
+        text-sm
+        font-medium
+        text-slate-800
+        shadow-sm
+        transition
+        cursor-pointer
+      "
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <Store
+          size={20}
+          className="shrink-0 text-violet-600"
+        />
 
-                <span className="max-w-[105px] truncate">
-                  {storeName}
-                </span>
-              </div>
+        <span className="max-w-[105px] truncate">
+          {storeName}
+        </span>
+      </div>
 
-              <ChevronDown
-                size={18}
-                className={`shrink-0 transition-transform ${storeDropdownOpen ? "rotate-180" : ""
-                  }`}
-              />
-            </button>
+      <ChevronDown
+        size={18}
+        className={`shrink-0 transition-transform ${
+          storeDropdownOpen ? "rotate-180" : ""
+        }`}
+      />
+    </button>
 
-
-            {/* =================================================
-          DESKTOP STORE DROPDOWN
-      ================================================= */}
-            {storeDropdownOpen && (
+    {storeDropdownOpen && (
               <div
                 className="
             absolute
@@ -957,88 +955,97 @@ export default function Navbar({
               </div>
             )}
 
-          </div>
+  </div>
+)}
 
 
           {/* =================================================
-        ONLINE / OFFLINE
-    ================================================= */}
-          <button
-            type="button"
-            disabled={updatingStatus}
-            onClick={() =>
-              onOnlineStatusChange?.(!isOnline)
-            }
-            className={`
-        flex
-        h-12
-        items-center
-        gap-3
+  ONLINE / OFFLINE
+================================================= */}
+{stores.length > 0 && (
+  <button
+    type="button"
+    disabled={updatingStatus}
+    onClick={() =>
+      onOnlineStatusChange?.(!isOnline)
+    }
+    className={`
+      flex
+      h-12
+      items-center
+      gap-3
+      rounded-full
+      border
+      px-4
+      transition
+      ${
+        isOnline
+          ? "border-green-100 bg-green-50 text-green-600"
+          : "border-red-100 bg-red-50 text-red-500"
+      }
+      ${
+        updatingStatus
+          ? "cursor-not-allowed opacity-60"
+          : "hover:shadow-sm"
+      }
+    `}
+  >
+    {/* STATUS DOT */}
+    <span
+      className={`
+        h-3
+        w-3
+        shrink-0
         rounded-full
-        border
-        px-4
-        transition
-        ${isOnline
-                ? "border-green-100 bg-green-50 text-green-600"
-                : "border-red-100 bg-red-50 text-red-500"
-              }
-        ${updatingStatus
-                ? "cursor-not-allowed opacity-60"
-                : "hover:shadow-sm"
-              }
+        ${
+          isOnline
+            ? "bg-green-500"
+            : "bg-red-500"
+        }
       `}
-          >
+    />
 
-            <span
-              className={`
-          h-3
-          w-3
+    {/* STATUS TEXT */}
+    <span className="text-sm font-semibold">
+      {isOnline ? "Online" : "Offline"}
+    </span>
+
+    {/* SWITCH */}
+    <span
+      className={`
+        relative
+        h-7
+        w-12
+        shrink-0
+        rounded-full
+        p-1
+        transition
+        ${
+          isOnline
+            ? "bg-green-500"
+            : "bg-slate-300"
+        }
+      `}
+    >
+      <span
+        className={`
+          block
+          h-5
+          w-5
           rounded-full
-          ${isOnline
-                  ? "bg-green-500"
-                  : "bg-red-500"
-                }
+          bg-white
+          shadow
+          transition-transform
+          ${
+            isOnline
+              ? "translate-x-5"
+              : "translate-x-0"
+          }
         `}
-            />
-
-            <span className="text-sm font-semibold">
-              {isOnline ? "Online" : "Offline"}
-            </span>
-
-
-            {/* SWITCH */}
-            <span
-              className={`
-          relative
-          h-7
-          w-12
-          rounded-full
-          p-1
-          transition
-          ${isOnline
-                  ? "bg-green-500"
-                  : "bg-slate-300"
-                }
-        `}
-            >
-              <span
-                className={`
-            block
-            h-5
-            w-5
-            rounded-full
-            bg-white
-            shadow
-            transition-transform
-            ${isOnline
-                    ? "translate-x-5"
-                    : "translate-x-0"
-                  }
-          `}
-              />
-            </span>
-
-          </button>
+      />
+    </span>
+  </button>
+)}
 
 
           {/* =================================================
@@ -1094,54 +1101,53 @@ export default function Navbar({
         <div className="ml-auto flex items-center gap-2 lg:hidden">
 
           {/* MOBILE STORE */}
-          <div className="relative">
+{stores.length > 0 && (
+  <div className="relative">
 
-            <button
-              type="button"
-              onClick={() => {
-                setStoreDropdownOpen((prev) => !prev);
+    <button
+      type="button"
+      onClick={() => {
+        setStoreDropdownOpen((prev) => !prev);
 
-                if (!storeDropdownOpen) {
-                  const savedStoreId =
-                    localStorage.getItem("selectedStoreId");
+        if (!storeDropdownOpen) {
+          const savedStoreId =
+            localStorage.getItem("selectedStoreId");
 
-                  fetchAllStores(savedStoreId || undefined);
-                }
-              }}
-              className="
-          flex
-          h-10
-          max-w-[150px]
-          items-center
-          gap-2
-          rounded-xl
-          border
-          border-slate-200
-          bg-white
-          px-2.5
-          shadow-sm
-        "
-            >
+          fetchAllStores(savedStoreId || undefined);
+        }
+      }}
+      className="
+        flex
+        h-10
+        max-w-[150px]
+        items-center
+        gap-2
+        rounded-xl
+        border
+        border-slate-200
+        bg-white
+        px-2.5
+        shadow-sm
+      "
+    >
+      <Store
+        size={18}
+        className="shrink-0 text-violet-600"
+      />
 
-              <Store
-                size={18}
-                className="shrink-0 text-violet-600"
-              />
+      <span className="max-w-[75px] truncate text-xs font-semibold text-slate-800">
+        {storeName}
+      </span>
 
-              <span className="max-w-[75px] truncate text-xs font-semibold text-slate-800">
-                {storeName}
-              </span>
+      <ChevronDown
+        size={15}
+        className={`shrink-0 text-slate-500 transition-transform ${
+          storeDropdownOpen ? "rotate-180" : ""
+        }`}
+      />
+    </button>
 
-              <ChevronDown
-                size={15}
-                className={`shrink-0 text-slate-500 transition-transform ${storeDropdownOpen ? "rotate-180" : ""
-                  }`}
-              />
-
-            </button>
-
-
-            {/* MOBILE STORE DROPDOWN */}
+    {/* MOBILE STORE DROPDOWN */}
             {storeDropdownOpen && (
               <div
                 className="
@@ -1296,7 +1302,8 @@ export default function Navbar({
               </div>
             )}
 
-          </div>
+  </div>
+)}
 
 
           {/* MOBILE PROFILE */}

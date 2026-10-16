@@ -56,6 +56,7 @@ interface ProductActionModalProps {
   onClose: () => void;
   userRole?: "owner" | "manager" | "employee" | null;
   onEdit?: () => void;
+  onAddSimilarProducts?: () => void;
   onUpdateDiscount?: () => void;
   onUpdateInventory?: () => void;
   onManageMedia?: () => void;
@@ -68,6 +69,7 @@ export default function ProductActionModal({
   onClose,
    userRole,
    onEdit,
+   onAddSimilarProducts,
   onUpdateDiscount,
   onUpdateInventory,
   onManageMedia,
@@ -78,6 +80,7 @@ export default function ProductActionModal({
   const [showQR, setShowQR] = useState(false);
   const qrRef = useRef<SVGSVGElement>(null);
   const barcodeContainerRef = useRef<HTMLDivElement>(null);
+  
   const image = product.media?.find(
     (media) => !media.isDeleted && media.mediaUrl
   )?.mediaUrl;
@@ -406,6 +409,24 @@ const handleDownloadBarcode = () => {
 >
   <Edit size={20} />
   <span>Edit Product</span>
+</button>
+{/* ADD SIMILAR PRODUCTS */}
+
+<button
+  type="button"
+  onClick={() => {
+  onAddSimilarProducts?.();
+}}
+  className="
+    flex w-full items-center gap-4
+    rounded-xl border border-slate-200
+    bg-white px-4 py-3 text-left
+    font-semibold text-purple-600
+    hover:bg-slate-50
+  "
+>
+  <Package size={20} />
+  <span>Add Similar Products</span>
 </button>
 
           {/* UPDATE DISCOUNT */}

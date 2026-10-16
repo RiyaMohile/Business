@@ -38,10 +38,10 @@ interface CreateStoreDialogProps {
   onClose: () => void;
 }
 
-const API_URL = "https://api.thover.in/v2/api";
+const API_URL = "http://localhost:5000/v2/api";
 
 const ADDRESS_API_URL =
-  "https://api.thover.in/v1/api";
+  "http://localhost:5000/v1/api";
 
 const days = [
   "Monday",
@@ -199,6 +199,7 @@ const handleCreateAddress = async () => {
       name: newAddress.name.trim(),
       street: newAddress.street.trim(),
       area: newAddress.area.trim(),
+      pinCode: newAddress.pinCode.trim(),
       latitude: Number(newAddress.latitude),
       longitude: Number(newAddress.longitude),
       isPrimary: newAddress.isPrimary,

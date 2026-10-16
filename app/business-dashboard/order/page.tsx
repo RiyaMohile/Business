@@ -91,7 +91,7 @@ useEffect(() => {
       }
 
       const response = await axios.get(
-        `https://api.thover.in/v2/api/order/low-stock?storeId=${storeId}`,
+        `http://localhost:5000/v2/api/order/low-stock?storeId=${storeId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

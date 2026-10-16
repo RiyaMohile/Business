@@ -65,7 +65,7 @@ const id = searchParams.get("id");
       setLoading(true);
 
       const { data } = await api.get(
-        `/withdrawal/admin/${id}`
+        `http://localhost:5000/v1/api/withdrawal/admin/${id}`
       );
 
       setWithdrawal(data.withdrawal);
@@ -89,7 +89,7 @@ const id = searchParams.get("id");
 
     try {
       await api.patch(
-        `/withdrawal/admin/${withdrawal._id}/complete`,
+        `http://localhost:5000/v1/api/withdrawal/admin/${withdrawal._id}/complete`,
         {
           remark,
         }

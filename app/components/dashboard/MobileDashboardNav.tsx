@@ -16,49 +16,72 @@ export default function MobileDashboardNav() {
   const pathname = usePathname();
 
   const [isManager, setIsManager] = useState(false);
+const [hasStore, setHasStore] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkManager = async () => {
-      try {
-        const selectedStoreId =
-          localStorage.getItem("selectedStoreId");
+  const checkStoreAndManager = async () => {
+    try {
+      const userData =
+        localStorage.getItem("user");
 
-        const userData =
-          localStorage.getItem("user");
+      if (!userData) {
+        setHasStore(false);
+        setIsManager(false);
+        return;
+      }
 
-        if (!selectedStoreId || !userData) {
-          setIsManager(false);
-          return;
-        }
+      const user = JSON.parse(userData);
 
-        const user = JSON.parse(userData);
+      const response = await getMyStores();
 
-        const response = await getMyStores();
+      const stores =
+        response?.stores ||
+        response?.data?.stores ||
+        response?.data ||
+        [];
 
-        const stores =
-          response?.stores ||
-          response?.data?.stores ||
-          response?.data ||
-          [];
+      if (!Array.isArray(stores)) {
+        setHasStore(false);
+        setIsManager(false);
+        return;
+      }
 
-        if (!Array.isArray(stores)) {
-          setIsManager(false);
-          return;
-        }
+      // ==========================================
+      // NO STORE
+      // ==========================================
+      if (stores.length === 0) {
+        setHasStore(false);
+        setIsManager(false);
+        return;
+      }
 
-        // Selected store find karo
-        const selectedStore = stores.find(
-          (store: any) =>
-            store._id === selectedStoreId
-        );
+      // ==========================================
+      // STORE EXISTS
+      // ==========================================
+      setHasStore(true);
 
-        if (!selectedStore) {
-          setIsManager(false);
-          return;
-        }
+      const selectedStoreId =
+        localStorage.getItem("selectedStoreId");
 
-        // Selected store ke andar logged-in user find karo
-        const member = selectedStore.users?.find(
+      if (!selectedStoreId) {
+        setIsManager(false);
+        return;
+      }
+
+      // Selected store find karo
+      const selectedStore = stores.find(
+        (store: any) =>
+          store._id === selectedStoreId
+      );
+
+      if (!selectedStore) {
+        setIsManager(false);
+        return;
+      }
+
+      // Logged-in user ka member record
+      const member =
+        selectedStore.users?.find(
           (item: any) => {
             const memberUserId =
               typeof item.userId === "object"
@@ -73,39 +96,40 @@ export default function MobileDashboardNav() {
           }
         );
 
-        setIsManager(
-          member?.role === "manager"
-        );
+      setIsManager(
+        member?.role === "manager"
+      );
 
-      } catch (error) {
-        console.error(
-          "MOBILE NAV ROLE CHECK ERROR:",
-          error
-        );
+    } catch (error) {
+      console.error(
+        "MOBILE NAV STORE + ROLE CHECK ERROR:",
+        error
+      );
 
-        setIsManager(false);
-      }
-    };
+      setHasStore(false);
+      setIsManager(false);
+    }
+  };
 
-    checkManager();
+  checkStoreAndManager();
 
-    // Store change hone par role dobara check karo
-    const handleStoreChanged = () => {
-      checkManager();
-    };
+  // Store create/change hone par dobara check
+  const handleStoreChanged = () => {
+    checkStoreAndManager();
+  };
 
-    window.addEventListener(
+  window.addEventListener(
+    "selectedStoreChanged",
+    handleStoreChanged
+  );
+
+  return () => {
+    window.removeEventListener(
       "selectedStoreChanged",
       handleStoreChanged
     );
-
-    return () => {
-      window.removeEventListener(
-        "selectedStoreChanged",
-        handleStoreChanged
-      );
-    };
-  }, []);
+  };
+}, []);
 
   const items = [
     {
@@ -130,8 +154,12 @@ export default function MobileDashboardNav() {
 },
   ];
 
-  return (
-    <nav
+  if (hasStore !== true) {
+  return null;
+}
+
+return (
+  <nav
       className="
         fixed
         inset-x-0

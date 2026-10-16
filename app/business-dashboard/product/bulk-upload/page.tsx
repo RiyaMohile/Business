@@ -56,7 +56,7 @@ idealFor: "",
 
   inventory: [
     {
-      size: "M",
+      size: "",
       stock: 0,
     },
   ],
@@ -842,170 +842,216 @@ if (!post.priceType) {
   </div>
 </div>
 
+{/* ================= INVENTORY ================= */}
 
-        {/* ================= INVENTORY ================= */}
+<div className="md:col-span-2">
 
-        <div className="md:col-span-2">
+  <div className="mb-3 flex items-center justify-between">
+    <label className="text-sm font-medium">
+      Inventory
+    </label>
 
-          <div className="mb-3 flex items-center justify-between">
-            <label className="text-sm font-medium">
-              Inventory
-            </label>
+    <button
+      type="button"
+      onClick={() => addInventory(index)}
+      className="text-sm font-semibold text-blue-600"
+    >
+      + Add Size
+    </button>
+  </div>
 
+  <div className="space-y-3">
+
+    {post.inventory.map((item, inventoryIndex) => {
+
+      const standardSizes = [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL",
+        "XXXL",
+        "Free Size",
+      ];
+
+      const isCustom =
+        item.size !== "" &&
+        !standardSizes.includes(item.size);
+
+      return (
+        <div
+          key={inventoryIndex}
+          className="w-full min-w-0"
+        >
+
+          {/* ================= CUSTOM / NORMAL ================= */}
+
+          {isCustom ? (
+
+            /* CUSTOM SIZE */
+            <div className="grid w-full min-w-0 grid-cols-[70px_minmax(0,1fr)_55px] gap-1.5">
+
+              {/* CUSTOM SELECT */}
+              <select
+                value="Custom"
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  updateInventory(
+                    index,
+                    inventoryIndex,
+                    "size",
+                    value === "Custom"
+                      ? "Custom"
+                      : value
+                  );
+                }}
+                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-1 py-3 text-[11px]"
+              >
+                <option value="Custom">
+                  Custom
+                </option>
+
+                {standardSizes.map((size) => (
+                  <option
+                    key={size}
+                    value={size}
+                  >
+                    {size}
+                  </option>
+                ))}
+              </select>
+
+              {/* CUSTOM SIZE INPUT */}
+              <input
+                type="text"
+                value={
+                  item.size === "Custom"
+                    ? ""
+                    : item.size
+                }
+                onChange={(e) =>
+                  updateInventory(
+                    index,
+                    inventoryIndex,
+                    "size",
+                    e.target.value
+                  )
+                }
+                placeholder="Custom"
+                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-2 py-3 text-xs outline-none focus:border-blue-500"
+              />
+
+              {/* STOCK */}
+              <input
+                type="number"
+                min="0"
+                value={item.stock}
+                onChange={(e) =>
+                  updateInventory(
+                    index,
+                    inventoryIndex,
+                    "stock",
+                    e.target.value
+                  )
+                }
+                placeholder="0"
+                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-2 py-3 text-sm outline-none focus:border-blue-500"
+              />
+
+            </div>
+
+          ) : (
+
+            /* NORMAL SIZE */
+            <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_55px] gap-2">
+
+              {/* SIZE */}
+              <select
+                value={item.size}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (value === "Custom") {
+                    updateInventory(
+                      index,
+                      inventoryIndex,
+                      "size",
+                      "Custom"
+                    );
+                  } else {
+                    updateInventory(
+                      index,
+                      inventoryIndex,
+                      "size",
+                      value
+                    );
+                  }
+                }}
+                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-2 py-3 text-[14px] outline-none focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">
+                  Select Size
+                </option>
+
+                {standardSizes.map((size) => (
+                  <option
+                    key={size}
+                    value={size}
+                  >
+                    {size}
+                  </option>
+                ))}
+
+                <option value="Custom">
+                  Custom
+                </option>
+              </select>
+
+              {/* STOCK */}
+              <input
+                type="number"
+                min="0"
+                value={item.stock}
+                onChange={(e) =>
+                  updateInventory(
+                    index,
+                    inventoryIndex,
+                    "stock",
+                    e.target.value
+                  )
+                }
+                placeholder="0"
+                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-2 py-3 text-[14px] outline-none focus:border-blue-500"
+              />
+
+            </div>
+
+          )}
+
+          {/* REMOVE */}
+          {post.inventory.length > 1 && (
             <button
               type="button"
               onClick={() =>
-                addInventory(index)
+                removeInventory(
+                  index,
+                  inventoryIndex
+                )
               }
-              className="text-sm font-semibold text-blue-600"
+              className="mt-1 text-xs text-red-500"
             >
-              + Add Size
+              Remove
             </button>
-          </div>
+          )}
 
-
-          <div className="space-y-3">
-
-            {post.inventory.map(
-              (item, inventoryIndex) => {
-
-                const standardSizes = [
-                  "XS",
-                  "S",
-                  "M",
-                  "L",
-                  "XL",
-                  "XXL",
-                  "XXXL",
-                  "Free Size",
-                ];
-
-                const isCustom =
-                  item.size !== "" &&
-                  !standardSizes.includes(
-                    item.size
-                  );
-
-                return (
-                  <div
-  key={inventoryIndex}
-  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3"
->
-  <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-
-    {/* SIZE */}
-    <select
-      value={isCustom ? "Custom" : item.size}
-      onChange={(e) => {
-        const value = e.target.value;
-
-        if (value === "Custom") {
-          updateInventory(
-            index,
-            inventoryIndex,
-            "size",
-            ""
-          );
-        } else {
-          updateInventory(
-            index,
-            inventoryIndex,
-            "size",
-            value
-          );
-        }
-      }}
-      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 outline-none focus:border-blue-500"
-    >
-      <option value="">Select Size</option>
-
-      {standardSizes.map((size) => (
-        <option key={size} value={size}>
-          {size}
-        </option>
-      ))}
-
-      <option value="Custom">Custom</option>
-    </select>
-
-    {/* CUSTOM SIZE / STOCK */}
-    {isCustom || item.size === "" ? (
-      <input
-        type="text"
-        value={isCustom ? item.size : ""}
-        onChange={(e) =>
-          updateInventory(
-            index,
-            inventoryIndex,
-            "size",
-            e.target.value
-          )
-        }
-        placeholder="Enter custom size"
-        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 outline-none focus:border-blue-500"
-      />
-    ) : (
-      <input
-        type="number"
-        min="0"
-        value={item.stock}
-        onChange={(e) =>
-          updateInventory(
-            index,
-            inventoryIndex,
-            "stock",
-            e.target.value
-          )
-        }
-        placeholder="Stock"
-        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 outline-none focus:border-blue-500"
-      />
-    )}
-
-    {/* REMOVE */}
-    {post.inventory.length > 1 && (
-      <button
-        type="button"
-        onClick={() =>
-          removeInventory(
-            index,
-            inventoryIndex
-          )
-        }
-        className="w-full rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 sm:w-auto"
-      >
-        Remove
-      </button>
-    )}
-  </div>
-
-  {/* STOCK FOR CUSTOM SIZE */}
-  {isCustom && (
-    <div className="mt-3">
-      <input
-        type="number"
-        min="0"
-        value={item.stock}
-        onChange={(e) =>
-          updateInventory(
-            index,
-            inventoryIndex,
-            "stock",
-            e.target.value
-          )
-        }
-        placeholder="Stock"
-        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 outline-none focus:border-blue-500"
-      />
-    </div>
-  )}
-</div>
-                );
-              }
-            )}
-
-          </div>
         </div>
+      );
+    })}
+
+  </div>
+</div>
 
 
         {/* ================= PRODUCT IMAGE ================= */}

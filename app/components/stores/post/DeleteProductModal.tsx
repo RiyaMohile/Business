@@ -34,7 +34,7 @@ export default function DeleteProductModal({
       }
 
       const { data } = await axios.delete(
-        `https://api.thover.in/v1/api/post/delete_post/${post._id}`,
+        `http://localhost:5000/v1/api/post/delete_post/${post._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -66,7 +66,7 @@ export default function EmailStep({
       }
 
       const { data } = await axios.get(
-        `https://api.thover.in/v1/api/email/user/${userId}`,
+        `http://localhost:5000/v1/api/email/user/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -147,7 +147,7 @@ export default function EmailStep({
       const token = localStorage.getItem("token");
 
       await axios.post(
-        "https://api.thover.in/v1/api/email/request-otp",
+        "http://localhost:5000/v1/api/email/request-otp",
         {
           email: form.email,
         },
@@ -192,7 +192,7 @@ export default function EmailStep({
       const token = localStorage.getItem("token");
 
       const { data: response } = await axios.post(
-        "https://api.thover.in/v1/api/email",
+        "http://localhost:5000/v1/api/email",
         {
           email: form.email,
           otp,

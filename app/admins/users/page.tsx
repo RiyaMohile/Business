@@ -15,9 +15,23 @@ interface User {
   isAdmin: boolean;
 }
 
+interface Store {
+  _id: string;
+  storeId: string;
+  storeName: string;
+  category?: string;
+  status?: string;
+  isVerified?: boolean;
+  isOnline?: boolean;
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+
   const [loading, setLoading] = useState(false);
+  const [storesLoading, setStoresLoading] = useState(false);
+
   const [search, setSearch] = useState("");
 
   const fetchUsers = async () => {
@@ -26,12 +40,29 @@ export default function UsersPage() {
 
       const { data } = await api.get("/user/all-users");
 
-      setUsers(data.users);
+      setUsers(data.users || []);
     } catch (error) {
       console.log(error);
       alert("Unable to fetch users");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStores = async () => {
+    try {
+      setStoresLoading(true);
+
+      const { data } = await api.get(
+        "/admin-access/all-stores"
+      );
+
+      setStores(data.stores || []);
+    } catch (error) {
+      console.log(error);
+      alert("Unable to fetch stores");
+    } finally {
+      setStoresLoading(false);
     }
   };
 
@@ -45,10 +76,10 @@ export default function UsersPage() {
       setLoading(true);
 
       const { data } = await api.get(
-        `/user/search?username=${search}`
+        `/user/search?username=${encodeURIComponent(search)}`
       );
 
-      setUsers(data.users);
+      setUsers(data.users || []);
     } catch (error) {
       console.log(error);
       alert("Unable to search users");
@@ -59,6 +90,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
+    fetchStores();
   }, []);
 
   return (
@@ -84,6 +116,8 @@ export default function UsersPage() {
 
         <UserTable
           users={users}
+          stores={stores}
+          storesLoading={storesLoading}
           loading={loading}
           onRefresh={fetchUsers}
         />

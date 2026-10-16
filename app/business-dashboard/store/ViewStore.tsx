@@ -23,6 +23,8 @@ import {
   UserPlus,
   Wallet,
   Share2,
+  Store,
+  CreditCard,
 } from "lucide-react";
 
 import AddMemberModals from "../../components/stores/AddMemberModals";4
@@ -32,12 +34,34 @@ import {
   addStoreMember,removeStoreMember
 } from "../../services/storeApi";
 import { QRCodeSVG } from "qrcode.react";
+import axios from "axios";
+
+interface StoreSubscription {
+  subscriptionId?:
+    | string
+    | {
+        _id?: string;
+        planId?: {
+          name?: string;
+          price?: number;
+          currency?: string;
+          durationMonths?: number;
+          maxStores?: number | null;
+          unlimitedStores?: boolean;
+        };
+        expireAt?: string;
+        status?: string;
+      };
+  expireAt?: string;
+  createdAt?: string;
+}
 
 interface Store {
   _id?: string;
   storeId?: string;
   storeName: string;
   category: string;
+  subscription?: StoreSubscription;
   gstNumber?: string;
 
   status?: "public" | "suspended";
@@ -170,6 +194,12 @@ const [users, setUsers] = useState<any[]>([]);
 
 const [selectedUser, setSelectedUser] =
   useState<any | null>(null);
+  const [myStores, setMyStores] = useState<Store[]>([]);
+const [activating, setActivating] = useState(false);
+const [activatingStoreId, setActivatingStoreId] = useState("");
+const [activationError, setActivationError] = useState("");
+const [showLimitModal, setShowLimitModal] = useState(false);
+const [loadingMyStores, setLoadingMyStores] = useState(false);
 
 const [addingMember, setAddingMember] = useState(false);
 const [showDeleteMemberModal, setShowDeleteMemberModal] =
@@ -236,6 +266,189 @@ const fetchAllUsers = async () => {
     );
 
     setUsers([]);
+  }
+};
+
+
+const getCurrentUserId = (): string => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return "";
+
+    const payload = JSON.parse(
+      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
+    );
+
+    return String(
+      payload._id || payload.id || payload.userId || ""
+    );
+  } catch {
+    return "";
+  }
+};
+
+const getOwnerId = (item: Store): string => {
+  if (typeof item.userId === "object" && item.userId?._id) {
+    return String(item.userId._id);
+  }
+
+  const owner = item.users?.find(
+    (member) => member.role === "owner" || member.isOwner
+  );
+
+  if (!owner) return "";
+
+  return String(
+    typeof owner.userId === "object"
+      ? owner.userId?._id || ""
+      : owner.userId || ""
+  );
+};
+
+
+
+const fetchMyStores = async () => {
+  try {
+    setLoadingMyStores(true);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    const { data } = await axios.get(
+      "http://localhost:5000/v2/api/store/my-stores",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setMyStores(data?.stores || []);
+  } catch (error: any) {
+    console.error(
+      "FETCH MY STORES ERROR:",
+      error.response?.data || error.message
+    );
+  } finally {
+    setLoadingMyStores(false);
+  }
+};
+
+useEffect(() => {
+  fetchMyStores();
+}, []);
+
+
+const currentUserId = getCurrentUserId();
+const currentOwnerId = getOwnerId(store);
+
+
+
+
+const currentStoreFromList = myStores.find(
+  (item) => item.storeId === store.storeId
+);
+
+const currentSubscription =
+  currentStoreFromList?.subscription ?? store.subscription;
+
+const ownExpireAt = currentSubscription?.expireAt;
+
+const hasOwnActivePlan =
+  Boolean(currentSubscription?.subscriptionId) &&
+  Boolean(ownExpireAt) &&
+  new Date(ownExpireAt!).getTime() >= Date.now();
+
+// Owner ke kisi bhi store par active subscription hai ya nahi
+const hasOwnerActivePlan = myStores.some((item) => {
+  const expiry = item.subscription?.expireAt;
+
+  return (
+    Boolean(item.subscription?.subscriptionId) &&
+    Boolean(expiry) &&
+    new Date(expiry!).getTime() >= Date.now()
+  );
+});
+
+const hasActivePlan = hasOwnActivePlan;
+
+
+
+const isOwner = Boolean(
+  currentUserId &&
+  currentOwnerId &&
+  currentUserId === currentOwnerId
+);
+
+const visibleStores = myStores.filter((item) => {
+  // Owner ko apne saare stores dikhne chahiye.
+  if (isOwner) return true;
+
+  // Non-owner ko apna store aur owner ka main store hi dikhe.
+  const isCurrentStore =
+    item.storeId === store.storeId;
+
+  const isOwnerStore =
+    Boolean(currentOwnerId) &&
+    getOwnerId(item) === currentOwnerId;
+
+  
+
+
+  return isCurrentStore || isOwnerStore;
+});
+
+
+
+const handleActivateMyStore = async (storeId: string) => {
+  try {
+    setActivating(true);
+    setActivatingStoreId(storeId);
+    setActivationError("");
+    setShowLimitModal(false);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    const { data } = await axios.post(
+      `http://localhost:5000/v2/api/plans/${storeId}/activate-my-store`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (data?.success) {
+      await fetchMyStores();
+      alert(data.message || "Store activated successfully.");
+    } else {
+      setActivationError(
+        data?.message || "Unable to activate store."
+      );
+    }
+  } catch (error: any) {
+    const response = error.response?.data;
+
+    if (response?.code === "STORE_LIMIT_REACHED") {
+      setShowLimitModal(true);
+    } else {
+      setActivationError(
+        response?.message || "Unable to activate store."
+      );
+    }
+  } finally {
+    setActivating(false);
+    setActivatingStoreId("");
   }
 };
 
@@ -808,7 +1021,13 @@ const maskPhone = (
 
       return (
   <div
-    key={user?._id || String(member.userId) || index}
+  
+key={
+  user?._id ||
+  (typeof member.userId === "string" ? member.userId : undefined) ||
+  `member-${index}`
+}
+
     className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 bg-white"
   >
     <div className="flex items-center gap-3 ">
@@ -893,6 +1112,171 @@ const maskPhone = (
     {store.category || "—"}
   </p>
 </div>
+
+
+
+{/* SUBSCRIPTION PLAN */}
+<div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+  <div className="flex items-center gap-2">
+    <CreditCard size={18} className="text-purple-600" />
+    <p className="text-sm text-slate-500">
+      Subscription Plan
+    </p>
+  </div>
+  
+
+  
+<p className="mt-2 font-semibold text-slate-900">
+  {hasActivePlan ? "Active Plan" : "No Active Plan"}
+</p>
+
+{!hasActivePlan && (
+  <div className="mt-3">
+    <p className="text-sm text-amber-700">
+      You haven't purchased a subscription plan yet.
+      Please subscribe to activate your store.
+    </p>
+
+    <button
+      type="button"
+      onClick={() => router.push("/business-dashboard/plans")}
+      className="mt-3 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+    >
+      Choose Subscription Plan
+    </button>
+  </div>
+)}
+
+
+  {store.subscription?.expireAt && (
+    <p className="mt-1 text-sm text-slate-500">
+      Expires on:{" "}
+      {new Date(
+        store.subscription.expireAt
+      ).toLocaleDateString("en-IN")}
+    </p>
+  )}
+  
+</div>
+
+{/* MY STORES */}
+<div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+  <div className="flex items-center gap-2">
+    <Store size={18} className="text-purple-600" />
+    <p className="text-sm text-slate-500">My Stores</p>
+  </div>
+
+  {loadingMyStores ? (
+    <p className="mt-2 text-sm text-slate-500">
+      Loading stores...
+    </p>
+  ) : (
+    <div className="mt-3 space-y-3">
+      {visibleStores
+        .filter((item) => item.storeId !== store.storeId)
+        .map((item) => {
+          const expireAt = item.subscription?.expireAt;
+
+          const isActive =
+            Boolean(item.subscription?.subscriptionId) &&
+            Boolean(expireAt) &&
+            new Date(expireAt!).getTime() >= Date.now();
+
+          return (
+            <div
+              key={item._id || item.storeId}
+              className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="font-medium text-slate-900">
+                  {item.storeName}
+                </p>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Store ID: {item.storeId}
+                </p>
+
+                <p
+                  className={`mt-1 text-sm font-medium ${
+                    isActive
+                      ? "text-green-600"
+                      : "text-amber-600"
+                  }`}
+                >
+                  {isActive ? "Active" : "Not Active"}
+                </p>
+              </div>
+
+              
+
+{isActive ? (
+  <button
+    type="button"
+    disabled
+    className="cursor-default rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-700"
+  >
+    Active Plan
+  </button>
+) : (
+  <button
+    type="button"
+    onClick={() =>
+      item.storeId && handleActivateMyStore(item.storeId)
+    }
+    disabled={activating}
+    className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {activatingStoreId === item.storeId
+      ? "Activating..."
+      : "Activate Plan"}
+  </button>
+)}
+
+
+            </div>
+          );
+        })}
+
+      {visibleStores.filter(
+  (item) => item.storeId !== store.storeId
+).length === 0 && (
+  <p className="text-sm text-slate-500">
+    No other stores found.
+  </p>
+)}
+    </div>
+  )}
+
+  {activationError && (
+    <p className="mt-3 text-sm text-red-600">
+      {activationError}
+    </p>
+  )}
+
+  
+{showLimitModal && (
+  <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+    <p className="font-semibold text-amber-800">
+      Store limit reached
+    </p>
+
+    <p className="mt-1 text-sm text-amber-700">
+      Your current plan allows only 2 stores. To activate
+      another store, please manage or upgrade your plan.
+    </p>
+
+    <button
+      type="button"
+      onClick={() => router.push("/business-dashboard/plans")}
+      className="mt-3 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+    >
+      Manage Plan
+    </button>
+  </div>
+)}
+
+</div>
+
 
 {/* WALLET */}
 <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
@@ -1585,6 +1969,8 @@ const maskPhone = (
   addingMember={addingMember}
     onSearchUsers={searchUsers}
 />
+
+
     </main>
   );
 }

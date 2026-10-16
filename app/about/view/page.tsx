@@ -45,7 +45,7 @@ function ViewAboutContent() {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.get(
-        `https://api.thover.in/v1/api/about/${id}`,
+        `http://localhost:5000/v1/api/about/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

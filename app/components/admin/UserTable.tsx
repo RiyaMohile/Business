@@ -10,14 +10,28 @@ interface User {
   isAdmin: boolean;
 }
 
+interface Store {
+  _id: string;
+  storeId: string;
+  storeName: string;
+  category?: string;
+  status?: string;
+  isVerified?: boolean;
+  isOnline?: boolean;
+}
+
 interface Props {
   users: User[];
+  stores: Store[];
+  storesLoading: boolean;
   loading: boolean;
   onRefresh: () => void;
 }
 
 export default function UserTable({
   users,
+  stores,
+  storesLoading,
   loading,
   onRefresh,
 }: Props) {
@@ -62,27 +76,23 @@ export default function UserTable({
             {loading ? (
 
               <tr>
-
                 <td
                   colSpan={5}
                   className="py-10 text-center"
                 >
                   Loading...
                 </td>
-
               </tr>
 
             ) : users.length === 0 ? (
 
               <tr>
-
                 <td
                   colSpan={5}
                   className="py-10 text-center"
                 >
                   No Users Found
                 </td>
-
               </tr>
 
             ) : (
@@ -91,6 +101,8 @@ export default function UserTable({
                 <UserRow
                   key={user._id}
                   user={user}
+                  stores={stores}
+                  storesLoading={storesLoading}
                   onRefresh={onRefresh}
                 />
               ))
