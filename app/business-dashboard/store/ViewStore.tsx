@@ -1139,7 +1139,13 @@ key={
 
     <button
       type="button"
-      onClick={() => router.push("/business-dashboard/plans")}
+      onClick={() =>
+  router.push(
+    `/business-dashboard/plans?storeId=${encodeURIComponent(
+      store.storeId || ""
+    )}`
+  )
+}
       className="mt-3 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
     >
       Choose Subscription Plan
