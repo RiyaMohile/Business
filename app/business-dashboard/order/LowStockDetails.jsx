@@ -24,7 +24,7 @@ console.log("storeId from localStorage:", localStorage.getItem("selectedStoreId"
 console.log("====================================");
 
         const response = await axios.get(
-          `http://localhost:5000/v2/api/order/low-stock?storeId=${storeId}`,
+          `https://api.thover.in/v2/api/order/low-stock?storeId=${storeId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

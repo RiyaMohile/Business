@@ -49,7 +49,7 @@ interface StoreData {
 }
 
 const BASE_URL =
-  "http://localhost:5000/v1/api";
+  "https://api.thover.in/v1/api";
 
 export default function ManageStorePage() {
 

@@ -23,7 +23,7 @@ export default function AboutPage() {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.get(
-        "http://localhost:5000/v1/api/about",
+        "https://api.thover.in/v1/api/about",
         {
           headers: {
             Authorization: `Bearer ${token}`,

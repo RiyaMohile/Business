@@ -319,7 +319,7 @@ const fetchMyStores = async () => {
     }
 
     const { data } = await axios.get(
-      "http://localhost:5000/v2/api/store/my-stores",
+      "https://api.thover.in/v2/api/store/my-stores",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -419,7 +419,7 @@ const handleActivateMyStore = async (storeId: string) => {
     }
 
     const { data } = await axios.post(
-      `http://localhost:5000/v2/api/plans/${storeId}/activate-my-store`,
+      `https://api.thover.in/v2/api/plans/${storeId}/activate-my-store`,
       {},
       {
         headers: {

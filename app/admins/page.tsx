@@ -61,7 +61,7 @@ export default function AdminPage() {
 
       // Check ThoverAdmin
       const { data } = await api.get(
-        "http://localhost:5000/v1/api/thover-admin/my-access"
+        "https://api.thover.in/v1/api/thover-admin/my-access"
       );
 
       console.log("MY ACCESS:", data);
@@ -153,7 +153,7 @@ export default function AdminPage() {
       setStoresLoading(true);
 
       const { data } = await api.get(
-        "http://localhost:5000/v1/api/admin-access/all-stores"
+        "https://api.thover.in/v1/api/admin-access/all-stores"
       );
 
       setStores(data.stores || []);

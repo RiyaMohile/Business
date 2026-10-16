@@ -46,7 +46,7 @@ export interface AboutPagePayload {
   lastUpdated?: string;
 }
 
-const BASE_URL = "http://localhost:5000/v1/api/about";
+const BASE_URL = "https://api.thover.in/v1/api/about";
 
 /* =========================
    GET ALL

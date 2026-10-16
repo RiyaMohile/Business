@@ -140,7 +140,7 @@ export default function Navbar({
       }
 
       const { data } = await axios.get(
-        "http://localhost:5000/v1/api/auth/me",
+        "https://api.thover.in/v1/api/auth/me",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -398,7 +398,7 @@ export default function Navbar({
     setEditLoading(true);
 
     const response = await axios.put(
-      "http://localhost:5000/v1/api/user/complete-profile",
+      "https://api.thover.in/v1/api/user/complete-profile",
       {
         name: editName.trim(),
         username: editUsername.trim(),
@@ -454,7 +454,7 @@ export default function Navbar({
       }
 
       const { data } = await axios.get(
-        `http://localhost:5000/v1/api/user/details/${user._id}`,
+        `https://api.thover.in/v1/api/user/details/${user._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

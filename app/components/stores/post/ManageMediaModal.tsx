@@ -84,7 +84,7 @@ const handleAddMedia = async (
       formData.append("media", file);
 
       const { data } = await axios.post(
-        `http://localhost:5000/v1/api/post/add-media/${post._id}`,
+        `https://api.thover.in/v1/api/post/add-media/${post._id}`,
         formData,
         {
           headers: {
@@ -147,7 +147,7 @@ const handleAddMedia = async (
     }
 
     const { data } = await axios.delete(
-      `http://localhost:5000/v1/api/post/delete-media/${post._id}/${mediaId}`,
+      `https://api.thover.in/v1/api/post/delete-media/${post._id}/${mediaId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

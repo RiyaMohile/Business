@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:5000/v1/api";
+const BASE_URL = "https://api.thover.in/v1/api";
 
 export const getUserProducts = async (
   userId: string,
@@ -68,7 +68,7 @@ export const getStoreProducts = async (
   }
 
   const { data } = await axios.get(
-    `http://localhost:5000/v2/api/post/store/${storeId}`,
+    `https://api.thover.in/v2/api/post/store/${storeId}`,
     {
       params: {
         page,
@@ -98,7 +98,7 @@ export const addSimilarProducts = async (
   }
 
   const response = await axios.post(
-    `http://localhost:5000/v2/api/post/${postId}/similar-products`,
+    `https://api.thover.in/v2/api/post/${postId}/similar-products`,
     formData,
     {
       headers: {

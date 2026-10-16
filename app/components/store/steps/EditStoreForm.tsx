@@ -98,7 +98,7 @@ const [city, setCity] = useState(
 const [loading, setLoading] = useState(false);
 
 const API_URL =
-  "http://localhost:5000/v1/api";
+  "https://api.thover.in/v1/api";
 
 const INITIAL_ADDRESS: NewAddress = {
   name: "",

@@ -59,7 +59,7 @@ export default function RefundsPage() {
       setLoading(true);
 
       // Replace this URL with your actual admin GET endpoint.
-      const { data } = await api.get("http://localhost:5000/v1/api/refunds/admin");
+      const { data } = await api.get("https://api.thover.in/v1/api/refunds/admin");
 
       setRefunds(data.refunds ?? []);
     } catch (error) {
@@ -79,7 +79,7 @@ export default function RefundsPage() {
 
     try {
       setBusyId(id);
-      await api.patch(`http://localhost:5000/v1/api/order/refund/${id}/approve`);
+      await api.patch(`https://api.thover.in/v1/api/order/refund/${id}/approve`);
       await fetchRefunds();
       alert("Refund approved successfully.");
     } catch (error: any) {
@@ -113,7 +113,7 @@ export default function RefundsPage() {
     try {
       setBusyId(refund._id);
 
-      await api.patch(`http://localhost:5000/v1/api/order/refund/${refund._id}`, {
+      await api.patch(`https://api.thover.in/v1/api/order/refund/${refund._id}`, {
         refundStatus: status,
         ...(refundTransactionId
           ? { refundTransactionId }

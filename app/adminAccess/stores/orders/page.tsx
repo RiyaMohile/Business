@@ -113,7 +113,7 @@ const [toDate, setToDate] = useState("");
       }
 
       const { data } = await api.get(
-        "http://localhost:5000/v2/api/order/store-orders",
+        "https://api.thover.in/v2/api/order/store-orders",
         {
           params,
         }

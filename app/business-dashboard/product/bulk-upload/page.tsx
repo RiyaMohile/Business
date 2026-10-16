@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { Plus, Trash2, ArrowLeft, X } from "lucide-react";
 import { getSubcategoryInfo } from "@/app/services/categoryApi";
 import { getMyStore } from "@/app/services/storeApi";
+import PdfProductImport from "@/app/components/product/PdfProductImport";
+import { PdfProduct } from "@/app/components/product/pdfProductParser";
 
 interface InventoryItem {
   size: string;
@@ -154,7 +156,21 @@ const saveImage = (
 };
 
 export default function BulkUploadPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <BulkUploadContent />
+    </Suspense>
+  );
+}
+
+function BulkUploadContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // ?mode=pdf → "Upload PDF" option; otherwise "Add Multiple" (typing).
+  const pdfMode = searchParams.get("mode") === "pdf";
+  const [pdfImported, setPdfImported] = useState(false);
+  const showForm = !pdfMode || pdfImported;
 
   const [posts, setPosts] = useState<BulkPost[]>([
     createEmptyPost(),
@@ -224,6 +240,49 @@ export default function BulkUploadPage() {
         category: storeCategory,
       },
     ]);
+  };
+
+  // ==========================================
+  // IMPORT FROM PDF
+  // ==========================================
+
+  const importFromPdf = (products: PdfProduct[]) => {
+    const imported = products.map((product) => {
+      const empty = createEmptyPost();
+
+      return {
+        ...empty,
+        ...product,
+        category: storeCategory,
+        priceType: product.priceType || empty.priceType,
+      };
+    });
+
+    setPosts((prev) => {
+      // Replace the untouched starter card instead of leaving it blank on top.
+      const onlyBlankCard =
+        prev.length === 1 &&
+        !prev[0].topic.trim() &&
+        !prev[0].description.trim() &&
+        !prev[0].priceAmount &&
+        prev[0].mediaFiles.length === 0;
+
+      return onlyBlankCard ? imported : [...prev, ...imported];
+    });
+
+    setPdfImported(true);
+  };
+
+  const getMissingFields = (post: BulkPost) => {
+    const missing: string[] = [];
+
+    if (!post.topic.trim()) missing.push("name");
+    if (!post.description.trim()) missing.push("description");
+    if (!post.subCategory) missing.push("category");
+    if (!post.priceAmount || Number(post.priceAmount) <= 0) missing.push("price");
+    if (post.mediaFiles.length !== 1) missing.push("image");
+
+    return missing;
   };
 
   // ==========================================
@@ -472,16 +531,28 @@ if (!post.priceType) {
 
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              Add Products
+              {pdfMode ? "Upload PDF" : "Add Multiple Products"}
             </h1>
 
             <p className="text-sm text-slate-500">
-              Add multiple products and upload them together.
+              {pdfMode
+                ? "Add products in bulk from your product list or catalog."
+                : "Add multiple products and upload them together."}
             </p>
           </div>
         </div>
 
-{/* POSTS */}
+{/* IMPORT FROM PDF */}
+
+{pdfMode && (
+  <PdfProductImport
+    subcategories={subcategories}
+    onImport={importFromPdf}
+  />
+)}
+
+{showForm && (
+<>
 
 {/* POSTS */}
 
@@ -494,9 +565,18 @@ if (!post.priceType) {
       {/* ================= HEADER ================= */}
 
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">
-          Product {index + 1}
-        </h2>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <h2 className="text-lg font-bold">
+            Product {index + 1}
+          </h2>
+
+          {/* Only flag cards the user has started (e.g. imported from PDF). */}
+          {post.topic.trim() && getMissingFields(post).length > 0 && (
+            <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+              Needs {getMissingFields(post).join(", ")}
+            </span>
+          )}
+        </div>
 
         {posts.length > 1 && (
           <button
@@ -1179,6 +1259,9 @@ if (!post.priceType) {
     Confirm
   </button>
 </div>
+
+</>
+)}
 
       </main>
     </div>

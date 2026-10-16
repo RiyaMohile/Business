@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
+  FileUp,
+  ListPlus,
   Package,
+  Plus,
   Search,
   Trash2,
 } from "lucide-react";
@@ -70,6 +73,31 @@ interface Product {
 
   totalStock?: number;
 }
+
+// =====================================================
+// ADD PRODUCT OPTIONS
+// =====================================================
+
+const ADD_PRODUCT_OPTIONS = [
+  {
+    label: "Add Product",
+    href: "/business-dashboard/product/create",
+    icon: Plus,
+    primary: true,
+  },
+  {
+    label: "Add Multiple",
+    href: "/business-dashboard/product/bulk-upload",
+    icon: ListPlus,
+    primary: false,
+  },
+  {
+    label: "Upload PDF",
+    href: "/business-dashboard/product/bulk-upload?mode=pdf",
+    icon: FileUp,
+    primary: false,
+  },
+];
 
 // =====================================================
 // MAIN PRODUCTS PAGE
@@ -210,7 +238,7 @@ useEffect(() => {
       }
 
       const { data } = await axios.get(
-        "http://localhost:5000/v1/api/auth/me",
+        "https://api.thover.in/v1/api/auth/me",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -555,7 +583,7 @@ const isAllSelected =
     }
 
     const response = await axios.patch(
-  "http://localhost:5000/v2/api/post/bulk-archive",
+  "https://api.thover.in/v2/api/post/bulk-archive",
   {
     postIds: selectedProductIds,
     isArchived: activeTab === "Active",
@@ -626,7 +654,7 @@ const handleBulkDelete = async () => {
     }
 
     const response = await axios.delete(
-      "http://localhost:5000/v2/api/post/bulk-delete",
+      "https://api.thover.in/v2/api/post/bulk-delete",
       {
         data: {
           postIds: selectedProductIds,
@@ -762,7 +790,7 @@ const handleOpenActions = (product: Product) => {
             HEADER
         ================================================= */}
 
-        <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
   <div>
     <h1 className="text-2xl font-bold text-slate-900">
       Products
@@ -773,73 +801,51 @@ const handleOpenActions = (product: Product) => {
     </p>
   </div>
 
-  {/* ADD PRODUCT - ONLY WHEN PRODUCTS EXIST */}
+  {/* ADD PRODUCT OPTIONS - ONLY WHEN PRODUCTS EXIST */}
   {posts.length > 0 && selectedStoreRole === "owner" && (
   <div
     className="
-      flex
+      grid
       w-full
-      flex-row
-      items-center
+      grid-cols-3
       gap-2
+      sm:flex
       sm:w-auto
       sm:justify-end
     "
   >
-    {/* Add Product */}
-    <button
-      type="button"
-      onClick={() =>
-        router.push("/business-dashboard/product/create")
-      }
-      className="
-        flex-1
-        rounded-xl
-        bg-blue-600
-        px-1
-        py-2
-         text-[14px]
-        font-semibold
-        text-white
-        shadow-sm
-        transition
-        hover:bg-blue-700
-        active:scale-[0.98]
-        sm:flex-none
-        sm:px-4
-      "
-    >
-      <span className="mr-1 text-base">+</span>
-      Add Product
-    </button>
-
-    {/* Add Products */}
-    <button
-      type="button"
-      onClick={() =>
-        router.push("/business-dashboard/product/bulk-upload")
-      }
-      className="
-        flex-1
-        rounded-xl
-        border
-        border-blue-600
-        bg-white
-        px-
-        py-2
-        text-[13px]
-        font-semibold
-        text-blue-600
-        shadow-sm
-        transition
-        hover:bg-blue-50
-        active:scale-[0.98]
-        sm:flex-none
-        sm:px-4
-      "
-    >
-      <span className="mr-1 text-base">+</span>Add Products
-    </button>
+    {ADD_PRODUCT_OPTIONS.map(({ label, href, icon: Icon, primary }) => (
+      <button
+        key={href}
+        type="button"
+        onClick={() => router.push(href)}
+        className={`
+          flex
+          items-center
+          justify-center
+          gap-1
+          whitespace-nowrap
+          rounded-xl
+          px-1
+          py-2
+          text-[12px]
+          font-semibold
+          shadow-sm
+          transition
+          active:scale-[0.98]
+          sm:px-4
+          sm:text-[13px]
+          ${
+            primary
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "border border-blue-600 bg-white text-blue-600 hover:bg-blue-50"
+          }
+        `}
+      >
+        <Icon size={15} className="shrink-0" />
+        {label}
+      </button>
+    ))}
   </div>
 )}
 </div>
@@ -1044,30 +1050,36 @@ const handleOpenActions = (product: Product) => {
       </p>
 
       {posts.length === 0 && selectedStoreRole === "owner" && (
-        <button
-          type="button"
-          onClick={() =>
-            router.push(
-              "/business-dashboard/product/create"
-            )
-          }
-          className="
-            mt-5
-            rounded-xl
-            bg-blue-600
-            px-6
-            py-2.5
-            text-sm
-            font-semibold
-            text-white
-            shadow-sm
-            transition
-            hover:bg-blue-700
-          "
-        >
-          <span className="mr-1 text-base">+</span>
-          Add Product
-        </button>
+        <div className="mt-5 flex w-full max-w-xs flex-col gap-2 sm:max-w-none sm:flex-row sm:justify-center">
+          {ADD_PRODUCT_OPTIONS.map(({ label, href, icon: Icon, primary }) => (
+            <button
+              key={href}
+              type="button"
+              onClick={() => router.push(href)}
+              className={`
+                flex
+                items-center
+                justify-center
+                gap-1.5
+                rounded-xl
+                px-6
+                py-2.5
+                text-sm
+                font-semibold
+                shadow-sm
+                transition
+                ${
+                  primary
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "border border-blue-600 bg-white text-blue-600 hover:bg-blue-50"
+                }
+              `}
+            >
+              <Icon size={16} />
+              {label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   ) : (
