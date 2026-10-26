@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -5,10 +6,27 @@ import {
   Package,
   ShoppingBag,
   ReceiptText,
+  CreditCard,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getMyStores } from "@/app/services/storeApi";
+
+interface StoreSubscription {
+  subscriptionId?: string | { _id?: string } | null;
+  expireAt?: string | Date | null;
+}
+
+interface Store {
+  _id: string;
+  storeId?: string;
+  users?: {
+    userId: string | { _id?: string };
+    status: string;
+    role: string;
+  }[];
+  subscription?: StoreSubscription | null;
+}
 
 export default function DashboardSidebar() {
   const router = useRouter();
@@ -16,6 +34,9 @@ export default function DashboardSidebar() {
 
   const [isManager, setIsManager] = useState(false);
   const [hasStore, setHasStore] = useState<boolean | null>(null);
+  const [hasActivePlan, setHasActivePlan] = useState(false);
+  const [selectedPublicStoreId, setSelectedPublicStoreId] =
+  useState("");
 
   useEffect(() => {
     const checkStoreAndRole = async () => {
@@ -23,107 +44,99 @@ export default function DashboardSidebar() {
         const selectedStoreId =
           localStorage.getItem("selectedStoreId");
 
-        const userData =
-          localStorage.getItem("user");
+        const userData = localStorage.getItem("user");
 
         if (!userData) {
           setHasStore(false);
           setIsManager(false);
+          setHasActivePlan(false);
           return;
         }
 
         const user = JSON.parse(userData);
-
         const response = await getMyStores();
 
-        // API response check
         if (
           !response?.success ||
           !Array.isArray(response?.stores)
         ) {
           setHasStore(false);
           setIsManager(false);
+          setHasActivePlan(false);
           return;
         }
 
-        // =====================================
-        // CHECK USER HAS ANY STORE OR NOT
-        // =====================================
-
-        const stores = response.stores;
+        const stores: Store[] = response.stores;
 
         if (stores.length === 0) {
-          // User ke paas koi store nahi hai
           setHasStore(false);
           setIsManager(false);
-
-          console.log("SIDEBAR: User has NO store");
-
+          setHasActivePlan(false);
           return;
         }
 
-        // User ke paas kam se kam 1 store hai
         setHasStore(true);
-
-        console.log("SIDEBAR: User has store", stores);
-
-        // =====================================
-        // CHECK MANAGER ROLE
-        // =====================================
 
         if (!selectedStoreId) {
           setIsManager(false);
+          setHasActivePlan(false);
           return;
         }
 
         const selectedStore = stores.find(
-          (store: any) =>
-            store._id?.toString() ===
-            selectedStoreId?.toString()
-        );
+  (store) =>
+    store._id?.toString() === selectedStoreId.toString() ||
+    store.storeId?.toString() === selectedStoreId.toString()
+);
 
-        if (!selectedStore) {
-          setIsManager(false);
-          return;
-        }
+if (!selectedStore) {
+  setIsManager(false);
+  setHasActivePlan(false);
+  setSelectedPublicStoreId("");
+  return;
+}
 
-        const member = selectedStore.users?.find(
-          (item: any) => {
-            const memberUserId =
-              typeof item.userId === "object"
-                ? item.userId?._id
-                : item.userId;
+// Public/business Store ID — MongoDB _id nahi
+setSelectedPublicStoreId(selectedStore.storeId || "");
 
-            return (
-              memberUserId?.toString() ===
-                user?._id?.toString() &&
-              item.status === "active"
-            );
-          }
-        );
+        // Check manager role
+        const member = selectedStore.users?.find((item) => {
+          const memberUserId =
+            typeof item.userId === "object"
+              ? item.userId?._id
+              : item.userId;
 
-        const manager =
-          member?.role === "manager";
-
-        setIsManager(manager);
-
-        console.log("SIDEBAR ROLE CHECK:", {
-          selectedStoreId,
-          userId: user?._id,
-          selectedStore,
-          member,
-          role: member?.role,
-          isManager: manager,
+          return (
+            memberUserId?.toString() === user?._id?.toString() &&
+            item.status === "active"
+          );
         });
 
-      } catch (error) {
-        console.error(
-          "SIDEBAR CHECK ERROR:",
-          error
-        );
+        setIsManager(member?.role === "manager");
 
+        // Check subscription for selected store
+        const subscription = selectedStore.subscription;
+        const subscriptionId =
+          typeof subscription?.subscriptionId === "object"
+            ? subscription.subscriptionId?._id
+            : subscription?.subscriptionId;
+
+        const expireAt = subscription?.expireAt
+          ? new Date(subscription.expireAt).getTime()
+          : 0;
+
+        const active =
+          Boolean(subscriptionId) &&
+          Boolean(expireAt) &&
+          !Number.isNaN(expireAt) &&
+          expireAt >= Date.now();
+
+        setHasActivePlan(active);
+      } catch (error) {
+        console.error("SIDEBAR CHECK ERROR:", error);
         setHasStore(false);
         setIsManager(false);
+        setHasActivePlan(false);
       }
     };
 
@@ -133,10 +146,7 @@ export default function DashboardSidebar() {
       checkStoreAndRole();
     };
 
-    window.addEventListener(
-      "selectedStoreChanged",
-      handleStoreChanged
-    );
+    window.addEventListener("selectedStoreChanged", handleStoreChanged);
 
     return () => {
       window.removeEventListener(
@@ -167,37 +177,104 @@ export default function DashboardSidebar() {
       icon: ReceiptText,
       path: "/business-dashboard/bill",
     },
+    {
+      label: "Subscription Plan",
+      icon: CreditCard,
+      path: "/business-dashboard/plans",
+    },
   ];
-
-  // =====================================
-  // NO STORE → NO SIDEBAR
-  // =====================================
 
   if (hasStore !== true) {
     return null;
   }
 
-  // =====================================
-  // HAS STORE → SHOW SIDEBAR
-  // =====================================
+  const selectedStoreId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("selectedStoreId")
+      : null;
+
+  const handleNavigation = (path: string) => {
+  if (path === "/business-dashboard/plans") {
+    if (!selectedPublicStoreId) {
+      console.error("Public Store ID is missing");
+      return;
+    }
+
+    router.push(
+      `${path}?storeId=${encodeURIComponent(
+        selectedPublicStoreId
+      )}`
+    );
+
+    return;
+  }
+
+  if (
+    !hasActivePlan &&
+    [
+      "/business-dashboard/product",
+      "/business-dashboard/order",
+      "/business-dashboard/bill",
+    ].includes(path)
+  ) {
+    if (!selectedPublicStoreId) {
+      console.error("Public Store ID is missing");
+      return;
+    }
+
+    router.push(
+      `/business-dashboard/plans?storeId=${encodeURIComponent(
+        selectedPublicStoreId
+      )}`
+    );
+
+    return;
+  }
+
+  router.push(path);
+};
 
   return (
     <aside
       className="
-        fixed
-        left-0
-        top-20
-        z-40
-        hidden
-        h-[calc(100dvh-80px)]
-        w-[248px]
-        border-r
-        border-slate-200
-        bg-white
-        md:block
+        fixed left-0 top-20 z-40 hidden
+        h-[calc(100dvh-80px)] w-[248px]
+        border-r border-slate-200 bg-white md:block
       "
     >
       <div className="flex h-full flex-col px-5 py-6">
+        <div
+          className={`mb-5 rounded-xl border p-4 ${
+            hasActivePlan
+              ? "border-emerald-200 bg-emerald-50"
+              : "border-amber-200 bg-amber-50"
+          }`}
+        >
+          <p className="text-xs font-medium text-slate-500">
+            Store Subscription
+          </p>
+
+          <p
+            className={`mt-1 text-sm font-bold ${
+              hasActivePlan
+                ? "text-emerald-700"
+                : "text-amber-700"
+            }`}
+          >
+            {hasActivePlan ? "Active Plan" : "No Active Plan"}
+          </p>
+
+          {!hasActivePlan && (
+            <button
+              type="button"
+              onClick={() => handleNavigation("/business-dashboard/plans")}
+              className="mt-3 w-full rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
+            >
+              Choose Subscription Plan
+            </button>
+          )}
+        </div>
+
         <nav className="flex flex-col gap-2">
           {items.map((item) => {
             const Icon = item.icon;
@@ -205,27 +282,16 @@ export default function DashboardSidebar() {
             const isActive =
               pathname === item.path ||
               (item.path !== "/business-dashboard" &&
-                pathname.startsWith(
-                  `${item.path}/`
-                ));
+                pathname.startsWith(`${item.path}/`));
 
             return (
               <button
                 key={item.label}
                 type="button"
-                onClick={() =>
-                  router.push(item.path)
-                }
+                onClick={() => handleNavigation(item.path)}
                 className={`
-                  flex
-                  w-full
-                  items-center
-                  gap-4
-                  rounded-xl
-                  px-4
-                  py-3.5
-                  text-left
-                  transition-all
+                  flex w-full items-center gap-4 rounded-xl
+                  px-4 py-3.5 text-left transition-all
                   ${
                     isActive
                       ? "bg-violet-50 text-violet-700"
@@ -235,13 +301,9 @@ export default function DashboardSidebar() {
               >
                 <Icon
                   size={21}
-                  strokeWidth={
-                    isActive ? 2.2 : 1.8
-                  }
+                  strokeWidth={isActive ? 2.2 : 1.8}
                   className={
-                    isActive
-                      ? "text-violet-600"
-                      : "text-slate-600"
+                    isActive ? "text-violet-600" : "text-slate-600"
                   }
                 />
 

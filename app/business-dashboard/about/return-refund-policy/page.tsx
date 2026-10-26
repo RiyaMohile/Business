@@ -1,9 +1,12 @@
-import BusinessPolicyPage from "../../../components/BusinessPolicyPage";
+
+"use client";
+
+import BusinessPolicyPages from "@/app/components/BusinessPolicyPages";
 
 export default function Page() {
   return (
-    <BusinessPolicyPage
-      pageName="return-refund-policy"
+    <BusinessPolicyPages
+      // pageName="business-policies"
     />
   );
 }

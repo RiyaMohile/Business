@@ -9,6 +9,9 @@ import {
   Plus,
   Search,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getStoreProducts } from "../../services/productApi";
@@ -149,6 +152,29 @@ const productsPerPage = 5;
 
   const [manageMediaProduct, setManageMediaProduct] =
   useState<Product | null>(null);
+
+  
+const handleOpenImageViewer = (product: Product) => {
+  const images = (product.media ?? [])
+    .filter((media) => !media.isDeleted && media.mediaUrl)
+    .map((media) => media.mediaUrl as string);
+
+  if (images.length === 0) return;
+
+  sessionStorage.setItem(
+    "productImageGallery",
+    JSON.stringify({
+      images,
+      title: product.topic,
+    })
+  );
+
+  window.open(
+    "/business-dashboard/product/image-gallery",
+    "_blank"
+  );
+};
+
 
   // =====================================================
   // INITIAL LOAD
@@ -1099,64 +1125,51 @@ const handleOpenActions = (product: Product) => {
 
           return (
             <div
-              key={post._id}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOpenActions(post);
-              }}
-              className={`
-                flex
-                items-center
-                gap-3
-                px-3
-                py-3
-                ${
-                  index !== filteredProducts.length - 1
-                    ? "border-b border-slate-100"
-                    : ""
-                }
-              `}
-            >
-              {/* IMAGE */}
-
-              <div
-                className="
-                  h-[62px]
-                  w-[52px]
-                  shrink-0
-                  overflow-hidden
-                  rounded-lg
-                  bg-slate-100
-                "
-              >
-                {image ? (
-                  <img
-                    src={image}
-                    alt={post.topic}
-                    className="
-                      h-full
-                      w-full
-                      object-cover
-                    "
-                  />
-                ) : (
-                  <div
-                    className="
-                      flex
-                      h-full
-                      w-full
-                      items-center
-                      justify-center
-                      bg-slate-100
-                    "
-                  >
-                    <Package
-                      size={24}
-                      className="text-gray-400"
-                    />
-                  </div>
-                )}
-              </div>
+  key={post._id}
+  onClick={() => handleOpenActions(post)}
+  className={`
+    flex
+    cursor-pointer
+    items-center
+    gap-3
+    px-3
+    py-3
+    ${
+      index !== filteredProducts.length - 1
+        ? "border-b border-slate-100"
+        : ""
+    }
+  `}
+>{/* IMAGE */}
+<button
+  type="button"
+  onClick={(e) => {
+  e.stopPropagation();
+  handleOpenImageViewer(post);
+}}
+  aria-label={`View images of ${post.topic}`}
+  className="
+    h-[62px]
+    w-[52px]
+    shrink-0
+    overflow-hidden
+    rounded-lg
+    bg-slate-100
+    cursor-zoom-in
+  "
+>
+  {image ? (
+    <img
+      src={image}
+      alt={post.topic}
+      className="h-full w-full object-cover"
+    />
+  ) : (
+    <div className="flex h-full w-full items-center justify-center bg-slate-100">
+      <Package size={24} className="text-gray-400" />
+    </div>
+  )}
+</button>
 
               {/* PRODUCT DETAILS */}
 
@@ -1245,7 +1258,7 @@ const handleOpenActions = (product: Product) => {
         <div
   className="
     grid
-    grid-cols-[40px_minmax(200px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
+    grid-cols-[40px_180px_minmax(180px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
     items-center
     gap-4
     border-b
@@ -1258,23 +1271,23 @@ const handleOpenActions = (product: Product) => {
     text-slate-600
   "
 >
-
   <div className="flex justify-center">
-  <input
-    type="checkbox"
-    checked={isAllSelected}
-    onChange={handleSelectAll}
-    className="h-4 w-4 cursor-pointer accent-blue-600"
-  />
-</div>
+    <input
+      type="checkbox"
+      checked={isAllSelected}
+      onChange={handleSelectAll}
+      className="h-4 w-4 cursor-pointer accent-blue-600"
+    />
+  </div>
 
-          <span>Product</span>
-<span>Category</span>
-<span>Price</span>
-<span>Stock</span>
-<span>Status</span>
-<span className="text-center">Actions</span>
-        </div>
+  <span>Image</span>
+  <span>Product</span>
+  <span>Category</span>
+  <span>Price</span>
+  <span>Stock</span>
+  <span>Status</span>
+  <span className="text-center">Actions</span>
+</div>
 
         {/* DESKTOP PRODUCT ROWS */}
 
@@ -1293,18 +1306,19 @@ const handleOpenActions = (product: Product) => {
           return (
             <div
               key={post._id}
+              onClick={() => handleOpenActions(post)}
               className="
-                grid
-                grid-cols-[40px_minmax(200px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
-                items-center
-                gap-4
-                border-b
-                border-slate-100
-                px-5
-                py-5
-                transition
-                hover:bg-slate-50/50
-              "
+  grid
+  grid-cols-[40px_180px_minmax(180px,2fr)_minmax(100px,1fr)_100px_80px_100px_70px]
+  items-center
+  gap-4
+  border-b
+  border-slate-100
+  px-5
+  py-5
+  transition
+  hover:bg-slate-50/50
+"
             >
               <div className="flex justify-center">
   <input
@@ -1318,91 +1332,43 @@ const handleOpenActions = (product: Product) => {
   />
 </div>
 
-              {/* PRODUCT */}
+              
+{/* PRODUCT */}
+{/* IMAGE COLUMN */}
+<div className="flex items-center justify-start">
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      handleOpenImageViewer(post);
+    }}
+    className="h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-100"
+  >
+    {image ? (
+      <img
+        src={image}
+        alt={post.topic || "Product"}
+        className="h-full w-full object-cover"
+      />
+    ) : (
+      <div className="flex h-full w-full items-center justify-center">
+        <Package size={28} className="text-slate-400" />
+      </div>
+    )}
+  </button>
+</div>
 
-              <div
-                className="
-                  flex
-                  min-w-0
-                  cursor-pointer
-                  items-center
-                  gap-4
-                "
-                onClick={() =>
-                  handleOpenActions(post)
-                }
-              >
-                {/* IMAGE */}
+{/* PRODUCT COLUMN */}
+<div className="min-w-0">
+  <p className="truncate text-sm font-semibold text-slate-900">
+    {post.topic || "Untitled Product"}
+  </p>
 
-                <div
-                  className="
-                    h-[72px]
-                    w-[72px]
-                    shrink-0
-                    overflow-hidden
-                    rounded-xl
-                    border
-                    border-slate-100
-                    bg-slate-100
-                  "
-                >
-                  {image ? (
-                    <img
-                      src={image}
-                      alt={post.topic}
-                      className="
-                        h-full
-                        w-full
-                        object-cover
-                      "
-                    />
-                  ) : (
-                    <div
-                      className="
-                        flex
-                        h-full
-                        w-full
-                        items-center
-                        justify-center
-                      "
-                    >
-                      <Package
-                        size={28}
-                        className="text-slate-400"
-                      />
-                    </div>
-                  )}
-                </div>
+  <p className="mt-1 text-xs text-slate-500">
+    ID: {post.postId}
+  </p>
+</div>
 
-                {/* NAME + SKU */}
-
-                <div className="min-w-0">
-                  <p
-                    className="
-                      truncate
-                      text-base
-                      font-semibold
-                      text-slate-900
-                    "
-                  >
-                    {post.topic}
-                  </p>
-
-                  <p
-                    className="
-                      mt-1
-                      text-sm
-                      text-slate-500
-                    "
-                  >
-                    SKU: PRD
-                    {String(productNumber).padStart(
-                      3,
-                      "0"
-                    )}
-                  </p>
-                </div>
-              </div>
 
               {/* CATEGORY */}
 
@@ -1781,6 +1747,7 @@ fetchProducts();
     }}
   />
 )}
+
     </main>
     </div>
   );

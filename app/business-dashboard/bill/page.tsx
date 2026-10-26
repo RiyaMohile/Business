@@ -1,1016 +1,545 @@
+
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { Plus, Search, ReceiptText, RefreshCw } from "lucide-react";
 
-import BillSearch from "../../components/bill/BillSearch";
-import ProductSearchResult from "../../components/bill/ProductSearchResult";
-import BillCart, {
-  CartItem,
-} from "../../components/bill/BillCart";
-import CustomerDetails from "../../components/bill/CustomerDetails";
-import BillSummary from "../../components/bill/BillSummary";
-
-import DashboardSidebar from "@/app/components/DashboardSidebar";
 import Navbar from "@/app/components/Navbar";
+import DashboardSidebar from "@/app/components/DashboardSidebar";
 import MobileDashboardNav from "@/app/components/dashboard/MobileDashboardNav";
+import { getMyStores, updateStoreOnlineStatus } from "@/app/services/storeApi";
 
-import {
-  updateStoreOnlineStatus,
-  getMyStores,
-} from "../../services/storeApi";
-
-import {
-  searchProductByNumber,
-  createOfflineBill,
-  BillProduct,
-} from "../../services/billApi";
-import domtoimage from "dom-to-image-more";
-
-export default function BillPage() {
-  // ==========================================
-  // STATES
-  // ==========================================
-
-  const [selectedProduct, setSelectedProduct] =
-    useState<BillProduct | null>(null);
-
-  const [cart, setCart] =
-    useState<CartItem[]>([]);
-
-    const [generatedBill, setGeneratedBill] = useState<{
-  items: CartItem[];
-  customerPhone: string;
-  subtotal: number;
-  grandTotal: number;
+interface Bill {
+  _id: string;
   billNo?: string;
-} | null>(null);
+  billType?: "online" | "offline";
+  customerUserId?: {
+    name?: string;
+    phone?: string;
+  } | string | null;
+  createdBy?: {
+    name?: string;
+  } | string | null;
+  customerPhone?: string;
+  grandTotal?: number;
+  totalAmount?: number;
+  createdAt?: string;
+}
 
-  const [customerPhone, setCustomerPhone] =
-    useState("");
+interface Pagination {
+  currentPage: number;
+  limit: number;
+  totalBills: number;
+  totalPages: number;
+}
 
-  const [isGenerating, setIsGenerating] =
-    useState(false);
+export default function BillsPage() {
+  const router = useRouter();
 
-  const [isSearching, setIsSearching] =
-    useState(false);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [isOnline, setIsOnline] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  const [searchError, setSearchError] =
-    useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [billType, setBillType] = useState("");
+  const [search, setSearch] = useState("");
 
-  // ==========================================
-  // ONLINE / OFFLINE
-  // ==========================================
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    limit: 20,
+    totalBills: 0,
+    totalPages: 0,
+  });
 
-  const [isOnline, setIsOnline] =
-    useState(false);
+  const fetchBills = useCallback(async () => {
+    const storeId = localStorage.getItem("selectedStoreId");
+    const token = localStorage.getItem("token");
 
-  const [storeName, setStoreName] =
-    useState("");
+    if (!storeId) {
+      setError("Please select a store first.");
+      setBills([]);
+      setLoading(false);
+      return;
+    }
 
-  const [updatingStatus, setUpdatingStatus] =
-    useState(false);
+    if (!token) {
+      setError("Please log in again.");
+      setLoading(false);
+      return;
+    }
 
+    try {
+      setLoading(true);
+      setError("");
 
+      const params: Record<string, string | number> = {
+        page: pagination.currentPage,
+        limit: pagination.limit,
+      };
 
-  // ==========================================
-  // GET SELECTED STORE STATUS
-  // ==========================================
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      if (billType) params.billType = billType;
 
-  const fetchSelectedStoreStatus =
-    async () => {
-      try {
-        const selectedStoreId =
-          localStorage.getItem(
-            "selectedStoreId"
-          );
-
-        if (!selectedStoreId) {
-          setIsOnline(false);
-          setStoreName("");
-          return;
+      const response = await axios.get(
+        `https://api.thover.in/v1/api/bill/store/${storeId}`,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        const data =
-          await getMyStores();
-
-        if (
-          !data?.success ||
-          !Array.isArray(data?.stores)
-        ) {
-          setIsOnline(false);
-          setStoreName("");
-          return;
-        }
-
-        const selectedStore =
-          data.stores.find(
-            (store: any) =>
-              String(store._id) ===
-              String(selectedStoreId)
-          );
-
-        setIsOnline(
-          selectedStore?.isOnline ??
-            false
-        );
-
-        setStoreName(
-          selectedStore?.storeName ||
-            selectedStore?.name ||
-            ""
-        );
-      } catch (error: any) {
-        console.error(
-          "FETCH STORE ONLINE STATUS ERROR:",
-          error?.response?.data ||
-            error?.message
-        );
-
-        setIsOnline(false);
+      if (response.data?.success) {
+        setBills(response.data.data ?? []);
+        setPagination((previous) => ({
+          ...previous,
+          ...(response.data.pagination ?? {}),
+        }));
+      } else {
+        setBills([]);
+        setError(response.data?.message || "Unable to fetch bills.");
       }
-    };
+    } catch (err: any) {
+      console.error("FETCH BILLS ERROR:", err.response?.data || err);
 
-  // ==========================================
-  // ONLINE / OFFLINE UPDATE
-  // ==========================================
+      setBills([]);
+      setError(
+        err.response?.data?.message ||
+          "Unable to load bills. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.currentPage, pagination.limit, startDate, endDate, billType]);
 
-  const handleOnlineStatusChange =
-    async (
-      nextStatus: boolean
-    ) => {
-      const selectedStoreId =
-        localStorage.getItem(
-          "selectedStoreId"
+  const fetchStoreStatus = useCallback(async () => {
+    try {
+      const storeId = localStorage.getItem("selectedStoreId");
+      if (!storeId) return;
+
+      const response = await getMyStores();
+
+      if (response?.success && Array.isArray(response.stores)) {
+        const store = response.stores.find(
+          (item: any) => String(item._id) === String(storeId)
         );
 
-      if (!selectedStoreId) {
-        alert("Store not found");
-        return;
+        setStoreName(store?.storeName || store?.name || "");
+        setIsOnline(store?.isOnline ?? false);
       }
-
-      try {
-        setUpdatingStatus(true);
-
-        const response =
-          await updateStoreOnlineStatus(
-            selectedStoreId,
-            nextStatus
-          );
-
-        console.log(
-          "ONLINE STATUS RESPONSE:",
-          response
-        );
-
-        if (response?.success) {
-          setIsOnline(nextStatus);
-        } else {
-          alert(
-            response?.message ||
-              "Unable to update store status"
-          );
-        }
-      } catch (error: any) {
-        console.error(
-          "UPDATE ONLINE STATUS ERROR:",
-          error?.response?.data ||
-            error?.message
-        );
-
-        alert(
-          error?.response?.data
-            ?.message ||
-            "Unable to update store status"
-        );
-      } finally {
-        setUpdatingStatus(false);
-      }
-    };
-
-  // ==========================================
-  // INITIAL STORE STATUS
-  // ==========================================
-
-  useEffect(() => {
-    fetchSelectedStoreStatus();
+    } catch (err) {
+      console.error("FETCH STORE STATUS ERROR:", err);
+    }
   }, []);
 
-  // ==========================================
-  // STORE CHANGE LISTENER
-  // ==========================================
+  const handleOnlineStatusChange = async (nextStatus: boolean) => {
+    const storeId = localStorage.getItem("selectedStoreId");
+
+    if (!storeId) {
+      alert("Please select a store first.");
+      return;
+    }
+
+    try {
+      setUpdatingStatus(true);
+      const response = await updateStoreOnlineStatus(storeId, nextStatus);
+
+      if (response?.success) {
+        setIsOnline(nextStatus);
+      } else {
+        alert(response?.message || "Unable to update store status.");
+      }
+    } catch (err: any) {
+      alert(
+        err?.response?.data?.message ||
+          "Unable to update store status."
+      );
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStoreStatus();
+  }, [fetchStoreStatus]);
+
+  useEffect(() => {
+    fetchBills();
+  }, [fetchBills]);
 
   useEffect(() => {
     const handleStoreChange = () => {
-      fetchSelectedStoreStatus();
-
-      // Previous search result clear
-      setSelectedProduct(null);
-
-      // Search error clear
-      setSearchError("");
+      setPagination((previous) => ({
+        ...previous,
+        currentPage: 1,
+      }));
+      fetchStoreStatus();
     };
 
-    window.addEventListener(
-      "selectedStoreChanged",
-      handleStoreChange
-    );
+    window.addEventListener("selectedStoreChanged", handleStoreChange);
 
     return () => {
-      window.removeEventListener(
-        "selectedStoreChanged",
-        handleStoreChange
-      );
+      window.removeEventListener("selectedStoreChanged", handleStoreChange);
     };
-  }, []);
+  }, [fetchStoreStatus]);
 
+  const visibleBills = bills.filter((bill) => {
+    const customer =
+      typeof bill.customerUserId === "object" && bill.customerUserId
+        ? bill.customerUserId.name || bill.customerUserId.phone || ""
+        : "";
 
-  const handleGenerateBill = async () => {
-  // ==========================================
-  // VALIDATION
-  // ==========================================
+    const query = search.trim().toLowerCase();
 
-  if (cart.length === 0) {
-    alert("Please add at least one product.");
-    return false;
-  }
+    return (
+      !query ||
+      (bill.billNo || "").toLowerCase().includes(query) ||
+      customer.toLowerCase().includes(query) ||
+      (bill._id || "").toLowerCase().includes(query)
+    );
+  });
 
-  const selectedStoreId =
-    localStorage.getItem("selectedStoreId");
+  const formatDate = (date?: string) => {
+    if (!date) return "—";
 
-  if (!selectedStoreId) {
-    alert("Store not found.");
-    return false;
-  }
-
-  // ==========================================
-  // START LOADING
-  // ==========================================
-
-  try {
-    setIsGenerating(true);
-
-   // ========================================
-// PREPARE PRODUCTS
-// ========================================
-
-const products = cart.map((item) => ({
-  postId: item._id,
-  quantity: item.quantity,
-  size: item.size || null,
-}));
-
-    // ========================================
-    // CREATE BILL
-    // ========================================
-
-    const response = await createOfflineBill({
-      storeId: selectedStoreId,
-
-      customerPhone:
-        customerPhone.trim() || null,
-
-      products,
+    return new Date(date).toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
     });
-
-    // ========================================
-    // SUCCESS
-    // ========================================
-
- if (response?.success) {
-  console.log(
-    "BILL CREATED:",
-    response.bill
-  );
-
-  // Save generated bill data before clearing cart
-  setGeneratedBill({
-    items: [...cart],
-    customerPhone: customerPhone.trim(),
-    subtotal,
-    grandTotal,
-    billNo: response.bill?.billNo,
-  });
-
-  setCart([]);
-  setCustomerPhone("");
-
-  return true;
-} else {
-  alert(
-    response?.message ||
-      "Unable to generate bill."
-  );
-
-  return false;
-}
-
-  } catch (error: any) {
-    console.error(
-      "GENERATE BILL ERROR:",
-      error
-    );
-
-    alert(
-      error?.message ||
-        "Unable to generate bill."
-    );
-    return false;
-  } finally {
-    setIsGenerating(false);
-  }
-};
-  // ==========================================
-  // SEARCH PRODUCT BY PRODUCT NUMBER
-  // ==========================================
-
-  const handleProductSearch =
-    async (value: string) => {
-      const productNumber =
-        value.trim().toUpperCase();
-
-      if (!productNumber) {
-        return;
-      }
-
-      try {
-        setIsSearching(true);
-        setSearchError("");
-        setSelectedProduct(null);
-
-        const storeId =
-          localStorage.getItem(
-            "selectedStoreId"
-          );
-
-        if (!storeId) {
-          setSearchError(
-            "Please select a store first."
-          );
-          return;
-        }
-
-        const response =
-          await searchProductByNumber(
-            productNumber,
-            storeId
-          );
-
-        console.log(
-          "SEARCH PRODUCT RESPONSE:",
-          response
-        );
-
-        if (
-          response?.success &&
-          response?.data
-        ) {
-          setSelectedProduct(
-            response.data
-          );
-        } else {
-          setSearchError(
-            response?.message ||
-              "Product not found."
-          );
-        }
-      } catch (error: any) {
-        console.error(
-          "PRODUCT SEARCH ERROR:",
-          error
-        );
-
-        setSearchError(
-          error?.message ||
-            "Unable to search product."
-        );
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-// ==========================================
-// ADD PRODUCT TO CART
-// ==========================================
-
-const handleAddToCart = (
-  product: BillProduct,
-  selectedSize: string
-) => {
-  // Selected size ka inventory
-  const selectedInventory = product.inventory?.find(
-    (item) => item.size === selectedSize
-  );
-
-  const stock = selectedInventory?.stock ?? 0;
-
-  // Size required hai agar multiple sizes hain
-  if (
-    product.inventory &&
-    product.inventory.length > 1 &&
-    !selectedSize
-  ) {
-    alert("Please select a size.");
-    return;
-  }
-
-  if (stock <= 0) {
-    alert("Selected size is out of stock.");
-    return;
-  }
-
-  setCart((previousCart) => {
-    // Same product + same size
-    const existingItem = previousCart.find(
-      (item) =>
-        item._id === product._id &&
-        item.size === selectedSize
-    );
-
-    // Already in cart
-    if (existingItem) {
-      if (existingItem.quantity >= stock) {
-        alert(
-          "You cannot add more than available inventory."
-        );
-
-        return previousCart;
-      }
-
-      return previousCart.map((item) =>
-        item._id === product._id &&
-        item.size === selectedSize
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item
-      );
-    }
-
-    // New product
-    return [
-      ...previousCart,
-      {
-        ...product,
-        quantity: 1,
-        size: selectedSize || null,
-      },
-    ];
-  });
-
-  // Hide product result after adding
-  setSelectedProduct(null);
-};
-
-  // ==========================================
-  // UPDATE QUANTITY
-  // ==========================================
-
-  const handleUpdateQuantity = (
-    productId: string,
-    quantity: number
-  ) => {
-    if (quantity <= 0) {
-      setCart((previousCart) =>
-        previousCart.filter(
-          (item) =>
-            item._id !== productId
-        )
-      );
-
-      return;
-    }
-
-    setCart((previousCart) =>
-      previousCart.map((item) => {
-        if (
-          item._id !== productId
-        ) {
-          return item;
-        }
-
-        const maxStock =
-          item.totalStock ?? 0;
-
-        if (
-          quantity > maxStock
-        ) {
-          alert(
-            `Only ${maxStock} units available.`
-          );
-
-          return item;
-        }
-
-        return {
-          ...item,
-          quantity,
-        };
-      })
-    );
   };
 
-  // ==========================================
-  // REMOVE PRODUCT
-  // ==========================================
-
-  const handleRemoveProduct = (
-    productId: string
-  ) => {
-    setCart((previousCart) =>
-      previousCart.filter(
-        (item) =>
-          item._id !== productId
-      )
-    );
-  };
-
-  // ==========================================
-  // CLEAR CART
-  // ==========================================
-
-  const handleClearCart = () => {
-    setCart([]);
-  };
-
-  // ==========================================
-  // TOTAL ITEMS
-  // ==========================================
-
-  const totalItems = useMemo(() => {
-    return cart.reduce(
-      (total, item) =>
-        total + item.quantity,
-      0
-    );
-  }, [cart]);
-
-  // ==========================================
-  // SUBTOTAL
-  // ==========================================
-
-  const subtotal = useMemo(() => {
-    return cart.reduce(
-      (total, item) => {
-        const price =
-          item.price?.amount ?? 0;
-
-        return (
-          total +
-          price * item.quantity
-        );
-      },
-      0
-    );
-  }, [cart]);
-
-  const grandTotal = subtotal;
-
-const handlePrintBill = () => {
-  if (!generatedBill) {
-    alert("Please generate a bill first.");
-    return;
-  }
-
-  window.print();
-};
-
-// ==========================================
-// SEND BILL IMAGE TO WHATSAPP
-// ==========================================
-
-const handleSendWhatsApp = async () => {
-  if (!generatedBill) {
-    alert("Please generate a bill first.");
-    return;
-  }
-
-  const phone = generatedBill.customerPhone;
-
-  if (!phone) {
-    alert("Please enter customer phone number.");
-    return;
-  }
-
-  const digits = phone.replace(/\D/g, "");
-
-  const whatsappPhone =
-    digits.length === 10
-      ? `91${digits}`
-      : digits;
-
-  const billElement =
-  document.querySelector(
-    ".print-bill"
-  ) as HTMLElement | null;
-
-if (!billElement) {
-  alert("Bill not found.");
-  return;
-}
-
-try {
-  billElement.style.display = "block";
-
-  // ==========================================
-  // CREATE BILL IMAGE
-  // ==========================================
-
-  const dataUrl =
-    await domtoimage.toPng(
-      billElement,
-      {
-        bgcolor: "#ffffff",
-        quality: 1,
-        cacheBust: true,
-        width: 700,
-        height: billElement.scrollHeight,
-        style: {
-          background: "#ffffff",
-        },
-      }
-    );
-    // ==========================================
-    // CONVERT DATA URL TO FILE
-    // ==========================================
-
-    const response =
-      await fetch(dataUrl);
-
-    const blob =
-      await response.blob();
-
-    const file = new File(
-      [
-        blob,
-      ],
-      `Bill-${
-        generatedBill.billNo || "Bill"
-      }.png`,
-      {
-        type: "image/png",
-      }
-    );
-
-    // ==========================================
-    // SHARE IMAGE
-    // ==========================================
-
-    if (
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({
-        files: [file],
-      })
-    ) {
-      await navigator.share({
-        title: "Bill",
-        text: "Your bill",
-        files: [file],
-      });
-
-      return;
-    }
-
-    // ==========================================
-    // DESKTOP FALLBACK
-    // ==========================================
-
-    const imageUrl =
-      URL.createObjectURL(blob);
-
-    const link =
-      document.createElement("a");
-
-    link.href = imageUrl;
-
-    link.download =
-      `Bill-${
-        generatedBill.billNo || "Bill"
-      }.png`;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(imageUrl);
-
-    window.open(
-      `https://wa.me/${whatsappPhone}`,
-      "_blank"
-    );
-
-    alert(
-      "Bill image downloaded. Please attach it in WhatsApp."
-    );
-
-  } catch (error) {
-    console.error(
-      "WHATSAPP BILL IMAGE ERROR:",
-      error
-    );
-
-    alert(
-      "Unable to create bill image."
-    );
-  }
-};
-
-  // ==========================================
-  // UI
-  // ==========================================
+  const formatMoney = (amount?: number) =>
+    `₹${Number(amount ?? 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50">
-
-      {/* ========================================
-          NAVBAR
-      ======================================== */}
-
+    <div className="min-h-screen bg-slate-50">
       <Navbar
         onAccountModalChange={() => {}}
         isOnline={isOnline}
-        onOnlineStatusChange={
-          handleOnlineStatusChange
-        }
-        updatingStatus={
-          updatingStatus
-        }
+        onOnlineStatusChange={handleOnlineStatusChange}
+        updatingStatus={updatingStatus}
       />
-
-      {/* ========================================
-          DESKTOP SIDEBAR
-      ======================================== */}
 
       <div className="hidden md:block">
         <DashboardSidebar />
       </div>
 
-      {/* ========================================
-          MAIN
-      ======================================== */}
-
-      <main
-        className="
-          min-h-[100dvh]
-          bg-slate-50
-          px-3
-          pb-24
-          pt-20
-          md:ml-[248px]
-          md:min-h-[calc(100dvh-80px)]
-          md:w-[calc(100%-248px)]
-          md:px-10
-          md:pb-10
-          md:pt-28
-        "
-      >
-
-        {/* MOBILE NAV */}
-
+      <main className="min-h-screen px-3 pb-24 pt-20 md:ml-[248px] md:w-[calc(100%-248px)] md:px-10 md:pb-10 md:pt-28">
         <div className="md:hidden">
           <MobileDashboardNav />
         </div>
 
         <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-6 mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">
+                Bills
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">
+                {storeName
+                  ? `View and manage bills for ${storeName}.`
+                  : "View and manage your store bills."}
+              </p>
+            </div>
 
-          {/* HEADER */}
-
-          <div className="mb-5 mt-4">
-            <h1 className="text-2xl font-bold text-slate-900">
+            <button
+              type="button"
+              onClick={() => router.push("/business-dashboard/bill/create")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            >
+              <Plus size={18} />
               Create Bill
-            </h1>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Search products, add them to
-              the cart, and generate a bill
-              for your customer.
-            </p>
+            </button>
           </div>
 
-          {/* MAIN GRID */}
-
-          <div
-            className="
-              grid
-              grid-cols-1
-              gap-5
-              xl:grid-cols-[1.4fr_1fr]
-            "
-          >
-
-            {/* ==================================
-                LEFT SIDE
-            ================================== */}
-
-            <section className="min-w-0">
-
-              {/* SEARCH */}
-
-              <BillSearch
-                onSearch={
-                  handleProductSearch
-                }
-                loading={
-                  isSearching
-                }
-              />
-
-              {/* ERROR */}
-
-              {searchError && (
-                <div
-                  className="
-                    mt-4 rounded-xl
-                    border border-red-200
-                    bg-red-50
-                    px-4 py-3
-                    text-sm text-red-600
-                  "
-                >
-                  {searchError}
-                </div>
-              )}
-
-              {/* PRODUCT RESULT */}
-
-              {selectedProduct && (
-                <div className="mt-4">
-                  <ProductSearchResult
-                    product={
-                      selectedProduct
-                    }
-                    onAddToCart={
-                      handleAddToCart
-                    }
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+            <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end">
+              <div className="flex-1">
+                <label className="mb-1.5 block text-xs font-semibold text-slate-600">
+                  Search bill
+                </label>
+                <div className="relative">
+                  <Search
+                    size={17}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search by bill number or customer"
+                    className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
-              )}
+              </div>
 
-              {/* EMPTY SEARCH */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-600">
+                  Bill type
+                </label>
+                <select
+                  value={billType}
+                  onChange={(event) => {
+                    setBillType(event.target.value);
+                    setPagination((previous) => ({
+                      ...previous,
+                      currentPage: 1,
+                    }));
+                  }}
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm lg:w-40"
+                >
+                  <option value="">All bills</option>
+                  <option value="offline">Offline</option>
+                  <option value="online">Online</option>
+                </select>
+              </div>
 
-              {!selectedProduct &&
-                !searchError && (
-                  <div
-                    className="
-                      mt-4
-                      flex min-h-[220px]
-                      flex-col
-                      items-center
-                      justify-center
-                      rounded-2xl
-                      border
-                      border-dashed
-                      border-slate-300
-                      bg-white
-                      px-6 py-12
-                      text-center
-                    "
-                  >
-                    <div
-                      className="
-                        flex h-14 w-14
-                        items-center
-                        justify-center
-                        rounded-2xl
-                        bg-violet-50
-                        text-xl
-                      "
-                    >
-                      🔍
-                    </div>
-
-                    <h3 className="mt-3 text-sm font-semibold text-slate-700">
-                      Search for a product
-                    </h3>
-
-                    <p className="mt-1 max-w-md text-xs text-slate-400">
-                      Enter the product number
-                      above to find the product
-                      and add it to the bill.
-                    </p>
-                  </div>
-                )}
-
-              {/* CART */}
-
-              <div className="mt-4">
-                <BillCart
-                  cart={cart}
-                  onUpdateQuantity={
-                    handleUpdateQuantity
-                  }
-                  onRemove={
-                    handleRemoveProduct
-                  }
-                  onClear={
-                    handleClearCart
-                  }
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-600">
+                  From date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(event) => {
+                    setStartDate(event.target.value);
+                    setPagination((previous) => ({
+                      ...previous,
+                      currentPage: 1,
+                    }));
+                  }}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
                 />
               </div>
-            </section>
 
-            {/* ==================================
-                RIGHT SIDE
-            ================================== */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-600">
+                  To date
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(event) => {
+                    setEndDate(event.target.value);
+                    setPagination((previous) => ({
+                      ...previous,
+                      currentPage: 1,
+                    }));
+                  }}
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
+                />
+              </div>
 
-            <section className="min-w-0">
+              <button
+                type="button"
+                onClick={() => fetchBills()}
+                disabled={loading}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <RefreshCw size={16} />
+                Refresh
+              </button>
+            </div>
 
-              {/* CUSTOMER */}
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-slate-500">
+                {pagination.totalBills} bill(s) found
+              </p>
+              <span className="text-xs text-slate-400">
+                Page {pagination.currentPage} of{" "}
+                {Math.max(pagination.totalPages, 1)}
+              </span>
+            </div>
 
-              <CustomerDetails
-                phone={customerPhone}
-                onPhoneChange={
-                  setCustomerPhone
+            {error && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="py-16 text-center text-sm text-slate-500">
+                Loading bills...
+              </div>
+            ) : visibleBills.length === 0 ? (
+              <div className="flex flex-col items-center py-16 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                  <ReceiptText size={27} />
+                </div>
+                <h2 className="mt-4 text-base font-semibold text-slate-800">
+                  No bills found
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Try changing the filters or create your first bill.
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    router.push("/business-dashboard/bill/create")
+                  }
+                  className="mt-4 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Create Bill
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="block">
+  <div className="max-h-[500px] overflow-auto rounded-xl border border-slate-200">
+    <table className="w-full min-w-[760px] border-collapse text-left">
+      <thead className="sticky top-0 z-20 bg-slate-50">
+        <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <th className="whitespace-nowrap px-4 py-3 font-semibold">
+            Bill No.
+          </th>
+          <th className="whitespace-nowrap px-4 py-3 font-semibold">
+            Customer
+          </th>
+          <th className="whitespace-nowrap px-4 py-3 font-semibold">
+            Type
+          </th>
+          <th className="whitespace-nowrap px-4 py-3 font-semibold">
+            Date
+          </th>
+          <th className="whitespace-nowrap px-4 py-3 text-right font-semibold">
+            Total
+          </th>
+        </tr>
+      </thead>
+                    <tbody>
+                      {visibleBills.map((bill) => {
+                        const customer =
+                          typeof bill.customerUserId === "object" &&
+                          bill.customerUserId
+                            ? bill.customerUserId.name ||
+                              bill.customerUserId.phone ||
+                              "Customer"
+                            : bill.customerPhone || "Walk-in customer";
+
+                        return (
+                          <tr
+                            key={bill._id}
+                            className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                          >
+                            <td className="px-4 py-4 text-sm font-semibold text-slate-800">
+                              {bill.billNo || bill._id.slice(-8).toUpperCase()}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600">
+                              {customer}
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold capitalize text-slate-700">
+                                {bill.billType || "—"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600">
+                              {formatDate(bill.createdAt)}
+                            </td>
+                            <td className="px-4 py-4 text-right text-sm font-bold text-slate-900">
+                              {formatMoney(bill.grandTotal ?? bill.totalAmount)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                </div>
+
+                {/* <div className="space-y-3 md:hidden">
+                  {visibleBills.map((bill) => {
+                    const customer =
+                      typeof bill.customerUserId === "object" &&
+                      bill.customerUserId
+                        ? bill.customerUserId.name ||
+                          bill.customerUserId.phone ||
+                          "Customer"
+                        : bill.customerPhone || "Walk-in customer";
+
+                    return (
+                      <article
+                        key={bill._id}
+                        className="rounded-xl border border-slate-100 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">
+                              {bill.billNo || bill._id.slice(-8).toUpperCase()}
+                            </p>
+                            <p className="mt-1 text-sm text-slate-600">
+                              {customer}
+                            </p>
+                          </div>
+                          <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold capitalize text-slate-700">
+                            {bill.billType || "—"}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex items-end justify-between gap-3 border-t border-slate-100 pt-3">
+                          <p className="text-xs text-slate-500">
+                            {formatDate(bill.createdAt)}
+                          </p>
+                          <p className="text-base font-bold text-slate-900">
+                            {formatMoney(bill.grandTotal ?? bill.totalAmount)}
+                          </p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div> */}
+              </>
+            )}
+
+            <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                disabled={loading || pagination.currentPage <= 1}
+                onClick={() =>
+                  setPagination((previous) => ({
+                    ...previous,
+                    currentPage: previous.currentPage - 1,
+                  }))
                 }
-              />
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Previous
+              </button>
 
-              {/* SUMMARY */}
+              <span className="text-xs text-slate-500">
+                {pagination.totalBills} total
+              </span>
 
-              <div className="mt-4">
-                <BillSummary
-                  totalItems={
-                    totalItems
-                  }
-                  subtotal={
-                    subtotal
-                  }
-                  isGenerating={
-                    isGenerating
-                  }
-                  disabled={
-                    cart.length === 0
-                  }
-                  onGenerateBill={
-                    handleGenerateBill
-                  }
-                  onPrintBill={
-                    handlePrintBill
-                  }
-                  onSendWhatsApp={
-                    handleSendWhatsApp
-                  }
-                />
-              </div>
-            </section>
-          </div>
+              <button
+                type="button"
+                disabled={
+                  loading ||
+                  pagination.currentPage >= pagination.totalPages
+                }
+                onClick={() =>
+                  setPagination((previous) => ({
+                    ...previous,
+                    currentPage: previous.currentPage + 1,
+                  }))
+                }
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </section>
         </div>
       </main>
-
-      <div className="print-bill">
-  <div className="print-bill__store">
-    {storeName || "Store"}
-  </div>
-
-  <div className="print-bill__title">
-    BILL
-  </div>
-
-  <div className="print-bill__divider" />
-
-  <table className="print-bill__table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Product Name</th>
-        <th>Size</th>
-        <th>Qty</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {generatedBill?.items.map((item, index) => (
-        <tr key={`${item._id}-${index}`}>
-          <td>{index + 1}</td>
-
-          <td>{item.topic}</td>
-
-          <td>{item.size || "-"}</td>
-
-          <td>{item.quantity}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-
-  <div className="print-bill__total">
-  <div className="print-bill__grand-total">
-    <span>Grand Total</span>
-
-    <strong>
-      ₹{generatedBill?.grandTotal.toFixed(2) ?? "0.00"}
-    </strong>
-  </div>
-</div>
-</div>
-
-
     </div>
   );
 }

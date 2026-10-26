@@ -38,6 +38,7 @@ import MobileDashboardNav from "../components/dashboard/MobileDashboardNav";
 import CreateWallet from "../components/stores/wallet/CreateWallet";
 import { getStoreOrders,updateOrderStatus, notifyNearbyRiders, } from "../services/orderApi";
 import DashboardSidebar from "../components/DashboardSidebar";
+import StoreSubscriptionCard from "../components/dashboard/StoreSubscriptionCard";
 
 const BASE_URL2 = "https://api.thover.in/v1/api";
 
@@ -1052,6 +1053,8 @@ const getTimeAgo = (date?: string) => {
     <p className="mt-1 hidden text-sm text-slate-500 md:block">
       Welcome back! Here's what's happening with your store.
     </p>
+  {/* MOBILE SUBSCRIPTION STATUS */}
+<StoreSubscriptionCard />
   </div>
 
   <p className="hidden text-sm font-medium text-slate-500 md:block">

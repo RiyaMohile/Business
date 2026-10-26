@@ -1116,7 +1116,7 @@ key={
 
 
 {/* SUBSCRIPTION PLAN */}
-<div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+{/* <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
   <div className="flex items-center gap-2">
     <CreditCard size={18} className="text-purple-600" />
     <p className="text-sm text-slate-500">
@@ -1163,10 +1163,10 @@ key={
     </p>
   )}
   
-</div>
+</div> */}
 
 {/* MY STORES */}
-<div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+{/* <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
   <div className="flex items-center gap-2">
     <Store size={18} className="text-purple-600" />
     <p className="text-sm text-slate-500">My Stores</p>
@@ -1281,7 +1281,7 @@ key={
   </div>
 )}
 
-</div>
+</div> */}
 
 
 {/* WALLET */}

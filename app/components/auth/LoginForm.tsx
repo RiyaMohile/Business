@@ -37,6 +37,10 @@ useEffect(() => {
 
   const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginMode, setLoginMode] = useState<"otp" | "password">("otp");
+const [username, setUsername] = useState("");
+const [password, setPassword] = useState("");
+const [showPassword, setShowPassword] = useState(false);
 
   
 
@@ -49,6 +53,74 @@ useEffect(() => {
       setMobile(value);
     }
   };
+
+  
+const handlePasswordLogin = async () => {
+  if (!username.trim() || !password) {
+    showAlert("Please enter username and password.", "warning");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    
+let deviceId: string | null = localStorage.getItem("deviceId");
+
+if (!deviceId) {
+  const deviceResponse = await registerDevice();
+
+  const newDeviceId = deviceResponse?.device?.deviceId;
+
+  if (!deviceResponse?.status || !newDeviceId) {
+    showAlert("Unable to register device.", "error");
+    return;
+  }
+
+  deviceId = newDeviceId;
+  localStorage.setItem("deviceId", newDeviceId);
+}
+
+
+    // Call the existing backend login API
+    const { data } = await api.post("/auth/login", {
+      username: username.trim(),
+      password,
+      deviceId,
+      platform: "business",
+      deviceType: "web",
+    });
+
+    if (!data?.success || !data?.token) {
+      showAlert(data?.message || "Login failed.", "error");
+      return;
+    }
+
+    // Save login session
+    localStorage.setItem("token", data.token);
+
+    if (data.userId) {
+      localStorage.setItem("userId", data.userId);
+    }
+
+    // Go to business dashboard
+    router.replace("/business-dashboard");
+  } catch (error: any) {
+    console.error(
+      "USERNAME PASSWORD LOGIN ERROR:",
+      error?.response?.data || error
+    );
+
+    showAlert(
+      error?.response?.data?.message ||
+        "Invalid username or password.",
+      "error"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 const sendOTP = async () => {
   if (mobile.length !== 10) {
@@ -360,10 +432,16 @@ if (checkingAuth) {
               </h1>
 
               <p className="mt-1 text-sm text-slate-500">
-                Login using OTP
-              </p>
+  {loginMode === "otp"
+    ? "Login using OTP"
+    : "Login using Username & Password"}
+</p>
 
             </div>
+
+
+            {loginMode === "otp" ? (
+              <>
 
             {/* MOBILE */}
 
@@ -447,6 +525,86 @@ if (checkingAuth) {
               )}
             </Button>
 
+            <Button
+  type="button"
+  variant="outline"
+  onClick={() => setLoginMode("password")}
+  className="mt-3 h-12 w-full rounded-xl border-blue-200
+    bg-white text-sm font-semibold text-blue-700 hover:bg-blue-50"
+>
+  Login with Username & Password
+</Button>
+
+            </>
+            ) : (
+              <>
+
+              
+  {/* USERNAME */}
+  <div className="mt-8">
+    <label className="mb-2 block text-sm font-medium text-slate-700">
+      Username
+    </label>
+
+    <Input
+      value={username}
+      onChange={(e) => setUsername(e.target.value)}
+      placeholder="Enter username"
+      autoComplete="username"
+      className="h-12 rounded-xl"
+    />
+  </div>
+
+  {/* PASSWORD */}
+  <div className="mt-4">
+    <label className="mb-2 block text-sm font-medium text-slate-700">
+      Password
+    </label>
+
+    <div className="relative">
+      <Input
+        type={showPassword ? "text" : "password"}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Enter password"
+        autoComplete="current-password"
+        className="h-12 rounded-xl pr-16"
+      />
+
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-1/2 -translate-y-1/2
+          text-sm font-medium text-blue-600"
+      >
+        {showPassword ? "Hide" : "Show"}
+      </button>
+    </div>
+  </div>
+
+  {/* CONFIRM LOGIN */}
+  <Button
+    type="button"
+    onClick={handlePasswordLogin}
+    disabled={loading || !username.trim() || !password}
+    className="mt-5 h-12 w-full rounded-xl bg-blue-600
+      text-sm font-semibold hover:bg-blue-700"
+  >
+    {loading ? "Signing in..." : "Confirm Login"}
+  </Button>
+
+  {/* BACK TO OTP */}
+  <button
+    type="button"
+    onClick={() => setLoginMode("otp")}
+    className="mt-4 w-full text-sm font-semibold text-blue-600"
+  >
+    Back to OTP Login
+  </button>
+  </>
+)}
+
+
             {/* REGISTER */}
 
             <div className="mt-12 text-center">
@@ -508,7 +666,7 @@ if (checkingAuth) {
         no-underline
       "
     >
-      Return Policy
+      Business Policies
     </button>
 
     <button

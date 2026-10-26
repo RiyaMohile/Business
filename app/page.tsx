@@ -95,7 +95,7 @@ export default function Home() {
               href="/business-dashboard/about/return-refund-policy/"
               className="text-sm font-medium text-slate-600 transition hover:text-purple-600"
             >
-              Return Policy
+              Business Policies
             </Link>
 
             <button
@@ -393,7 +393,7 @@ export default function Home() {
     href="/business-dashboard/about/return-refund-policy/"
     className="text-[10px] text-purple-600 font-bold  transition hover:text-purple-600"
   >
-    Return Policy
+    Business Policies
   </Link>
 
 </div>

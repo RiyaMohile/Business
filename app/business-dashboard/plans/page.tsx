@@ -41,6 +41,7 @@ function PlansContent() {
   const [buyingPlanId, setBuyingPlanId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -77,14 +78,18 @@ function PlansContent() {
 
   const handleBuyPlan = async (plan: SubscriptionPlan) => {
     if (!storeId) {
-      setError("Store ID missing hai. Please apne store page se plan choose karo.");
-      return;
-    }
+  setError(
+    "Store ID is missing. Please choose a plan from your store page."
+  );
+  return;
+}
 
-    if (!window.Razorpay) {
-      setError("Payment checkout load nahi hua. Page refresh karke try karo.");
-      return;
-    }
+if (!window.Razorpay) {
+  setError(
+    "Payment checkout failed to load. Please refresh the page and try again."
+  );
+  return;
+}
 
     try {
       setError("");
@@ -201,9 +206,9 @@ function PlansContent() {
               Choose Your Plan
             </h1>
 
-            <p className="mt-3 text-slate-600">
-              Apne store ke liye suitable subscription plan select karein.
-            </p>
+           <p className="mt-3 text-slate-600">
+  Select a suitable subscription plan for your store.
+</p>
 
             {storeId ? (
               <p className="mt-2 text-sm text-slate-500">
@@ -294,12 +299,12 @@ function PlansContent() {
                         : plan.maxStores ?? "Not specified"}
                     </li>
 
-                    {plan.maxPosts != null && (
+                    {/* {plan.maxPosts != null && (
                       <li>
                         <span className="font-medium">Posts:</span>{" "}
                         {plan.maxPosts}
                       </li>
-                    )}
+                    )} */}
 
                     {(plan.features ?? []).map((feature, index) => (
                       <li key={`${plan._id}-feature-${index}`}>
@@ -316,7 +321,9 @@ function PlansContent() {
                       buyingPlanId !== null ||
                       plan.isActive === false
                     }
+                    //plan active
                     onClick={() => void handleBuyPlan(plan)}
+                    // onClick={() => setShowComingSoon(true)}
                     className="mt-7 w-full rounded-lg bg-purple-600 px-4 py-3 font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {buyingPlanId === plan._id
@@ -328,6 +335,48 @@ function PlansContent() {
             </div>
           )}
         </div>
+
+
+        
+{showComingSoon && (
+  <div
+    className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4"
+    onClick={() => setShowComingSoon(false)}
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="coming-soon-title"
+      className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-violet-100 text-2xl">
+        🚀
+      </div>
+
+      <h2
+        id="coming-soon-title"
+        className="mt-4 text-xl font-bold text-slate-900"
+      >
+        Coming Soon!
+      </h2>
+
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        Subscription payments will be available soon.
+        Thank you for your patience!
+      </p>
+
+      <button
+        type="button"
+        onClick={() => setShowComingSoon(false)}
+        className="mt-5 w-full rounded-lg bg-purple-600 px-4 py-3 font-semibold text-white transition hover:bg-purple-700"
+      >
+        Okay, Got It
+      </button>
+    </div>
+  </div>
+)}
+
       </main>
     </>
   );
