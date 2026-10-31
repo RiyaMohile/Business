@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getCategories } from "../../../services/categoryApi";
 import { updateStore,updateStoreAddress } from "../../../services/storeApi";
+import { createAddress } from "../../../services/addressApi";
 import axios from "axios";
 
 import {
@@ -457,16 +458,9 @@ const handleCreateAddress = async () => {
   isPrimary: newAddress.isPrimary,
 };
 
-    const { data } = await axios.post(
-      `${API_URL}/address/location`,
+    const data = await createAddress(
       payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type":
-            "application/json",
-        },
-      }
+      token
     );
 
     const createdAddress =

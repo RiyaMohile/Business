@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { createAddress } from "../../services/addressApi";
 import {
   X,
   Store,
@@ -199,22 +200,16 @@ const handleCreateAddress = async () => {
       name: newAddress.name.trim(),
       street: newAddress.street.trim(),
       area: newAddress.area.trim(),
+      city: newAddress.city.trim(),
+      state: newAddress.state.trim(),
+      country: newAddress.country.trim(),
       pinCode: newAddress.pinCode.trim(),
       latitude: Number(newAddress.latitude),
       longitude: Number(newAddress.longitude),
       isPrimary: newAddress.isPrimary,
     };
 
-    const { data } = await axios.post(
-      `${ADDRESS_API_URL}/address/location`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const data = await createAddress(payload, token);
 
     const createdAddress = data?.data;
 

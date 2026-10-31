@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   ReceiptText,
   CreditCard,
+  RotateCcw,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -173,6 +174,11 @@ setSelectedPublicStoreId(selectedStore.storeId || "");
       path: "/business-dashboard/order",
     },
     {
+      label: "Returns",
+      icon: RotateCcw,
+      path: "/business-dashboard/returns",
+    },
+    {
       label: "Bill",
       icon: ReceiptText,
       path: "/business-dashboard/bill",
@@ -214,6 +220,7 @@ setSelectedPublicStoreId(selectedStore.storeId || "");
     [
       "/business-dashboard/product",
       "/business-dashboard/order",
+      "/business-dashboard/returns",
       "/business-dashboard/bill",
     ].includes(path)
   ) {

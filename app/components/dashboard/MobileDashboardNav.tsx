@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   Wallet,
   ReceiptText,
+  RotateCcw,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -146,6 +147,11 @@ const [hasStore, setHasStore] = useState<boolean | null>(null);
       label: "Orders",
       icon: ShoppingBag,
       path: "/business-dashboard/order",
+    },
+    {
+      label: "Returns",
+      icon: RotateCcw,
+      path: "/business-dashboard/returns",
     },
     {
   label: "Bill",

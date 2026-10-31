@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { createAddress } from "../../../services/addressApi";
 import {
   Loader2,
   MapPin,
@@ -198,16 +199,7 @@ const handleCreateAddress = async () => {
 
     console.log("CREATE ADDRESS PAYLOAD:", payload);
 
-    const { data } = await axios.post(
-      `${API_URL}/address/location`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const data = await createAddress(payload, token);
 
     console.log("CREATE ADDRESS RESPONSE:", data);
 
