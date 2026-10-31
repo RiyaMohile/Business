@@ -6,6 +6,8 @@ import Sidebar from "../components/Sidebar";
 import WalletSearch from "../components/wallets/WalletSearch";
 import WalletTable from "../components/wallets/WalletTable";
 import CoinModal from "../components/wallets/CoinModal";
+import { useRouter } from "next/navigation";
+import { Wallet, RotateCcw } from "lucide-react";
 
 interface WalletType {
   _id: string;
@@ -28,6 +30,8 @@ const [loading, setLoading] = useState(false);
 const [selectedWallet, setSelectedWallet] = useState<WalletType | null>(null);
 const [coinAmount, setCoinAmount] = useState("");
 const [action, setAction] = useState<"give" | "take" | null>(null);
+
+const router = useRouter();
  
 const giveCoins = async () => {
   if (!selectedWallet) return;
@@ -141,6 +145,25 @@ return (
         </p>
 
       </div>
+      <div className="mt-6 flex flex-wrap gap-3">
+  <button
+    type="button"
+    onClick={() => router.push("/withdrawals")}
+    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+  >
+    <Wallet size={18} />
+    Withdrawal Management
+  </button>
+
+  <button
+    type="button"
+    onClick={() => router.push("/refunds")}
+    className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700"
+  >
+    <RotateCcw size={18} />
+    Refund Management
+  </button>
+</div>
 
       {/* Search */}
       <WalletSearch

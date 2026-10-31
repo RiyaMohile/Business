@@ -16,6 +16,7 @@ import {
   CreditCard,
   Landmark,
   RotateCcw,
+  Images
 } from "lucide-react";
 
 import api from "../services/api";
@@ -213,16 +214,46 @@ export default function Sidebar() {
     setMobileOpen(false);
   }, [pathname]);
 
-  // =====================================================
-  // ACTIVE URL
-  // =====================================================
-
-  const isActive = (href: string) => {
+ const isActive = (href: string) => {
+  // Management sirf apne exact route par active hoga
+  if (href === "/adminAccess/management") {
     return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`)
+      pathname === "/adminAccess/management" ||
+      pathname.startsWith("/adminAccess/plans")
     );
-  };
+  }
+  if (href === "/adminAccess/stores") {
+    return (
+      pathname === "/adminAccess/stores" ||
+      pathname.startsWith("/adminAccess/management/riders")
+    );
+  }
+
+   // Wallet blue on Wallet, Withdrawal, and Refund pages
+  if (href === "/wallets") {
+    return (
+      pathname === "/wallets" ||
+      pathname.startsWith("/withdrawals") ||
+      pathname.startsWith("/refunds")
+    );
+  }
+
+  // Refunds and Withdrawal should not be independently blue
+  if (
+    href === "/refunds" ||
+    href === "/withdrawals"
+  ) {
+    return false;
+  }
+
+ 
+
+  // Baaki links ka existing behavior
+  return (
+    pathname === href ||
+    pathname.startsWith(`${href}/`)
+  );
+};
 
   // =====================================================
   // MENU LINK
@@ -362,12 +393,21 @@ export default function Sidebar() {
 {/* PLAN / SUBSCRIPTION - ONLY SUPER ADMIN */}
 {/* ================================================= */}
 
-{admin.isSuperAdmin && (
+{/* {admin.isSuperAdmin && (
   <MenuLink
     href="/adminAccess/plans"
     title="Plan / Subscription"
     icon={CreditCard}
   />
+)} */}
+
+
+{admin.isSuperAdmin && (
+<MenuLink
+  href="/adminAccess/management/posts"
+  icon={Images}
+  title="Post Management"
+/>
 )}
 
         {/* ================================================= */}
@@ -385,22 +425,22 @@ export default function Sidebar() {
         
 {/* WITHDRAWALS - ONLY SUPER ADMIN */}
 
-{admin.isSuperAdmin && (
+{/* {admin.isSuperAdmin && (
   <MenuLink
     href="/withdrawals"
     title="Withdrawals"
     icon={Landmark}
   />
-)}
+)} */}
 
 {/* REFUNDS - ONLY SUPER ADMIN */}
-{admin.isSuperAdmin && (
+{/* {admin.isSuperAdmin && (
   <MenuLink
     href="/refunds"
     title="Refunds"
     icon={RotateCcw}
   />
-)}
+)} */}
 
       </>
     );

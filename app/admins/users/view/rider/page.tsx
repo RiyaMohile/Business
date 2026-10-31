@@ -25,7 +25,7 @@ interface Rider {
 
   drivingLicenceNumber: string;
 
-  isAvailable: boolean;
+  isOnline: boolean;
 
   isVerified: boolean;
 
@@ -133,7 +133,7 @@ const id = searchParams.get("id");
                     <User size={18} />
 
                     <span>
-                      @{rider.userId.username}
+                      {rider.userId.username}
                     </span>
 
                   </div>
@@ -247,25 +247,23 @@ const id = searchParams.get("id");
 
                   </div> */}
 
-                  <div>
+<div className="flex items-center gap-2">
+  <span className="font-medium">
+    Online Status :
+  </span>
 
-                    <span className="font-medium">
+  <span
+    className={`rounded-full px-3 py-1 text-sm font-semibold ${
+      rider.isOnline
+        ? "bg-green-100 text-green-700"
+        : "bg-gray-100 text-gray-600"
+    }`}
+  >
+    {rider.isOnline ? "Online" : "Offline"}
+  </span>
+</div>
 
-                      Available :
-
-                    </span>
-
-                    <span className="ml-2">
-
-                      {rider.isAvailable
-                        ? "Yes"
-                        : "No"}
-
-                    </span>
-
-                  </div>
-
-                  <div className="flex items-center gap-3">
+                  {/* <div className="flex items-center gap-3">
 
                     <ShieldCheck
                       className="text-green-600"
@@ -280,7 +278,7 @@ const id = searchParams.get("id");
 
                     </span>
 
-                  </div>
+                  </div> */}
 
                 </div>
 

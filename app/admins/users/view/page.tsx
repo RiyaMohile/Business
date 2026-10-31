@@ -132,7 +132,7 @@ const id = searchParams.get("id");
               </h2>
 
               <p className="text-gray-500">
-                @{user.username}
+                {user.username}
               </p>
 
             </div>

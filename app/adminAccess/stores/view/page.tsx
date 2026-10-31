@@ -41,24 +41,22 @@ export default function ViewStorePage() {
       try {
         setLoading(true);
 
-        const storeId =
-  sessionStorage.getItem(
-    "selectedStoreId"
-  );
+        const storeId = sessionStorage.getItem("selectedStoreId");
 
 if (!storeId) {
   setError("Store ID not found");
+  setLoading(false);
   return;
 }
 
-console.log(
-  "Fetching store for storeId:",
-  storeId
+const { data } = await api.get(
+  `https://api.thover.in/v1/api/admin-access/stores/${storeId}`
 );
 
-const { data } = await api.get(
-  `https://api.thover.in/v1/api/store/my-store`
-);
+console.log("Store response:", data);
+
+setStore(data.store);
+setVerification(data.verification ?? null);
 
         console.log(
           "Store response:",

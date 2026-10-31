@@ -77,12 +77,12 @@ function PlansContent() {
   }, [fetchPlans]);
 
   const handleBuyPlan = async (plan: SubscriptionPlan) => {
-    if (!storeId) {
-  setError(
-    "Store ID is missing. Please choose a plan from your store page."
-  );
-  return;
-}
+//     if (!storeId) {
+//   setError(
+//     "Store ID is missing. Please choose a plan from your store page."
+//   );
+//   return;
+// }
 
 if (!window.Razorpay) {
   setError(
@@ -210,15 +210,11 @@ if (!window.Razorpay) {
   Select a suitable subscription plan for your store.
 </p>
 
-            {storeId ? (
-              <p className="mt-2 text-sm text-slate-500">
-                Store ID: {storeId}
-              </p>
-            ) : (
-              <p className="mt-3 text-sm text-red-600">
-                Store ID missing hai. Store details page se aayein.
-              </p>
-            )}
+            {storeId && (
+  <p className="mt-2 text-sm text-slate-500">
+    Store ID: {storeId}
+  </p>
+)}
           </div>
 
           {error && (
@@ -270,54 +266,59 @@ if (!window.Razorpay) {
                     {plan.name}
                   </h2>
 
-                  <p className="mt-2 min-h-10 text-sm text-slate-500">
-                    {plan.description || "Subscription plan for your store."}
-                  </p>
+                  
 
                   <div className="mt-5">
-                    <span className="text-3xl font-bold text-slate-900">
-                      {new Intl.NumberFormat("en-IN", {
-                        style: "currency",
-                        currency: plan.currency || "INR",
-                        maximumFractionDigits: 2,
-                      }).format(plan.price)}
-                    </span>
+  <span className="text-3xl font-bold text-slate-900">
+    {new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: plan.currency || "INR",
+      maximumFractionDigits: 2,
+    }).format(plan.price)}
+  </span>
 
-                    <span className="ml-2 text-sm text-slate-500">
-                      / {plan.durationMonths} month
-                      {plan.durationMonths === 1 ? "" : "s"}
-                    </span>
-                  </div>
+  <span className="ml-2 text-sm text-slate-500">
+    / {plan.durationMonths}{" "}
+    {plan.durationMonths === 1 ? "month" : "months"}
+  </span>
+</div>
 
                   <div className="my-5 h-px bg-slate-100" />
 
                   <ul className="flex-1 space-y-3 text-sm text-slate-700">
-                    <li>
-                      <span className="font-medium">Stores:</span>{" "}
-                      {plan.unlimitedStores
-                        ? "Unlimited"
-                        : plan.maxStores ?? "Not specified"}
-                    </li>
+  <li>
+    <span className="font-medium">Stores:</span>{" "}
+    {plan.unlimitedStores
+      ? "Unlimited"
+      : plan.maxStores ?? "Not specified"}
+  </li>
 
-                    {/* {plan.maxPosts != null && (
-                      <li>
-                        <span className="font-medium">Posts:</span>{" "}
-                        {plan.maxPosts}
-                      </li>
-                    )} */}
+  <li>
+    <span className="font-medium">Posts:</span>{" "}
+    {plan.maxPosts ?? 0}
+  </li>
 
-                    {(plan.features ?? []).map((feature, index) => (
-                      <li key={`${plan._id}-feature-${index}`}>
-                        <span className="mr-2 text-purple-600">✓</span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+  {(plan.features ?? []).length > 0 ? (
+    plan.features.map((feature, index) => (
+      <li
+        key={`${plan._id}-feature-${index}`}
+        className="flex items-start gap-2"
+      >
+        <span className="text-purple-600">✓</span>
+        <span>{feature}</span>
+      </li>
+    ))
+  ) : (
+    <li className="text-slate-400">
+      No additional features
+    </li>
+  )}
+</ul>
 
                   <button
                     type="button"
                     disabled={
-                      !storeId ||
+                     
                       buyingPlanId !== null ||
                       plan.isActive === false
                     }

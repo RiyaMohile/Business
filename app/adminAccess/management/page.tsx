@@ -6,6 +6,8 @@ import {
   FileText,
   MessageSquareText,
   Images,
+  Bike,
+  CreditCard
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -127,7 +129,7 @@ export default function ManagementPage() {
 
 
 {/* POST MANAGEMENT */}
-<button
+{/* <button
   type="button"
   onClick={() =>
     router.push("/adminAccess/management/posts")
@@ -153,8 +155,67 @@ export default function ManagementPage() {
     Filter posts by city, view and download images,
     and create multiple posts.
   </p>
+</button> */}
+
+
+{/* RIDER MANAGEMENT */}
+<button
+  type="button"
+  onClick={() =>
+    router.push("/adminAccess/management/riders")
+  }
+  className="group rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+>
+  <div className="flex items-start justify-between">
+    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+      <Bike size={24} />
+    </div>
+
+    <ChevronRight
+      size={20}
+      className="text-gray-400 transition group-hover:translate-x-1 group-hover:text-emerald-600"
+    />
+  </div>
+
+  <h2 className="mt-5 text-lg font-semibold text-gray-900">
+    Rider Management
+  </h2>
+
+  <p className="mt-2 text-sm leading-6 text-gray-500">
+    View riders, check online status, filter by location
+    and date, and manage rider reports.
+  </p>
 </button>
 
+
+{/* PLANS & SUBSCRIPTIONS */}
+<button
+  type="button"
+  onClick={() =>
+    router.push("/adminAccess/plans")
+  }
+  className="group rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+>
+  <div className="flex items-start justify-between">
+    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+      <CreditCard size={24} />
+    </div>
+
+    <ChevronRight
+      size={20}
+      className="text-gray-400 transition group-hover:translate-x-1 group-hover:text-blue-600"
+    />
+  </div>
+
+  <h2 className="mt-5 text-lg font-semibold text-gray-900">
+    Plans & Subscriptions
+  </h2>
+
+  <p className="mt-2 text-sm leading-6 text-gray-500">
+    Create subscription plans, view plan details, and
+    activate plans for stores.
+  </p>
+</button>
 
         </div>
 

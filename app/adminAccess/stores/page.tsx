@@ -101,6 +101,7 @@ const [showStoreDashboard, setShowStoreDashboard] = useState(false);
 
         const adminData = adminResponse.data?.admin;
 
+
 setAdmin(adminData);
 
 const savedIds = (adminData?.managedStoreIds || []).map(
@@ -108,8 +109,16 @@ const savedIds = (adminData?.managedStoreIds || []).map(
     typeof item === "string" ? item : item._id
 );
 
-setSelectedStoreIds(savedIds);
-setShowStoreDashboard(savedIds.length > 0);
+if (adminData?.isSuperAdmin === true) {
+  // Super Admin sees all stores directly
+  setSelectedStoreIds([]);
+  setShowStoreDashboard(true);
+} else {
+  // Normal Store Admin selects stores if none are assigned
+  setSelectedStoreIds(savedIds);
+  setShowStoreDashboard(savedIds.length > 0);
+}
+
 
         
 
@@ -133,9 +142,13 @@ setShowStoreDashboard(savedIds.length > 0);
         // 5. Get accessible stores
         // -----------------------------------------------
 
-        const storesResponse = await api.get(
-  "https://api.thover.in/v2/api/store/stores-by-city"
+        
+const storesResponse = await api.get(
+  "https://api.thover.in/v1/api/admin-access/all-stores"
 );
+
+setStores(storesResponse.data?.stores || []);
+
 
         console.log(
           "Stores Response:",
@@ -211,23 +224,27 @@ setShowStoreDashboard(savedIds.length > 0);
   }, [stores, search]);
 
 
-  const selectedStores = useMemo(() => {
+  
+const visibleStores = useMemo(() => {
+  if (admin?.isSuperAdmin) {
+    return stores;
+  }
+
   return stores.filter((store) =>
     selectedStoreIds.includes(store._id)
   );
-}, [stores, selectedStoreIds]);
+}, [admin, stores, selectedStoreIds]);
 
 const dashboardStores = useMemo(() => {
   const value = search.trim().toLowerCase();
 
-  return selectedStores.filter((store) => {
-    return (
-      store.storeName?.toLowerCase().includes(value) ||
-      store.storeId?.toLowerCase().includes(value) ||
-      store.category?.toLowerCase().includes(value)
-    );
-  });
-}, [selectedStores, search]);
+  return visibleStores.filter((store) =>
+    store.storeName?.toLowerCase().includes(value) ||
+    store.storeId?.toLowerCase().includes(value) ||
+    store.category?.toLowerCase().includes(value)
+  );
+}, [visibleStores, search]);
+
 
   
 
@@ -403,15 +420,27 @@ const saveSelectedStores = async () => {
         {/* HEADER */}
         {/* ============================================= */}
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Store Management
-          </h1>
+        
+<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <h1 className="text-3xl font-bold text-gray-900">
+      Store Management
+    </h1>
 
-          <p className="mt-1 text-gray-500">
-            Manage stores available to your account.
-          </p>
-        </div>
+    <p className="mt-1 text-gray-500">
+      Manage stores available to your account.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    onClick={() => router.push("/adminAccess/management/riders")}
+    className="rounded-lg bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-700"
+  >
+    Rider Management
+  </button>
+</div>
+
 
         {/* ============================================= */}
         {/* ADMIN INFO */}
@@ -438,7 +467,7 @@ const saveSelectedStores = async () => {
               </p>
 
               <p className="mt-1 text-lg font-semibold text-gray-900">
-                {selectedStores.length}
+                {visibleStores.length}
               </p>
             </div>
 
@@ -625,16 +654,20 @@ const saveSelectedStores = async () => {
           </div>
         )}
 
-        <div className="mt-6 flex justify-end">
-  <button
-    type="button"
-    onClick={saveSelectedStores}
-    disabled={savingStores}
-    className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    {savingStores ? "Saving..." : "Save Selected Stores"}
-  </button>
-</div>
+        
+{!admin?.isSuperAdmin && (
+  <div className="mt-6 flex justify-end">
+    <button
+      type="button"
+      onClick={saveSelectedStores}
+      disabled={savingStores}
+      className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {savingStores ? "Saving..." : "Save Selected Stores"}
+    </button>
+  </div>
+)}
+
        </>
       )}
 

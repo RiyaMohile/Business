@@ -27,15 +27,14 @@ subscriptionApi.interceptors.request.use((config) => {
 export interface SubscriptionPlan {
   _id: string;
   name: string;
-  description?: string;
   price: number;
-  currency?: string;
+  currency: string;
   durationMonths: number;
-  maxStores?: number | null;
-  unlimitedStores?: boolean;
-  maxPosts?: number | null;
-  features?: string[];
-  isActive?: boolean;
+  maxStores: number | null;
+  unlimitedStores: boolean;
+  maxPosts: number;
+  features: string[];
+  isActive: boolean;
 }
 
 export interface CreateSubscriptionOrderResponse {
@@ -79,9 +78,9 @@ export const createSubscriptionOrder = async (
   const response = await subscriptionApi.post(
     "/subscriptions/create-order",
     {
-      storeId,
-      planId,
-    }
+    planId,
+    ...(storeId?.trim() ? { storeId: storeId.trim() } : {}),
+  }
   );
 
   return response.data;
@@ -98,3 +97,13 @@ export const verifySubscriptionPayment = async (
 
   return response.data;
 };
+
+
+export const getCurrentSubscription = async () => {
+  const response = await subscriptionApi.get(
+    "https://api.thover.in/v1/api/subscription/current"
+  );
+
+  return response.data;
+};
+

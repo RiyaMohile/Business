@@ -1122,7 +1122,21 @@ const handleActivateSubscription = async (publicStoreId: string) => {
     </span>
   </button>
 )}
-
+{/* DESKTOP SUBSCRIPTION ICON */}
+<button
+  type="button"
+  onClick={() => router.push("/business-dashboard/plans")}
+  title="Subscription"
+  className="
+    flex h-11 w-11 shrink-0 items-center justify-center
+    rounded-full
+    bg-gradient-to-br from-blue-500 to-indigo-600
+    text-white shadow-sm
+    transition hover:scale-105 hover:shadow-md
+  "
+>
+  <CreditCard size={22} />
+</button>
 
           {/* =================================================
         PROFILE
@@ -1380,6 +1394,23 @@ const handleActivateSubscription = async (publicStoreId: string) => {
 
   </div>
 )}
+
+
+{/* SUBSCRIPTION ICON */}
+<button
+  type="button"
+  onClick={() => router.push("/business-dashboard/plans")}
+  title="Activate Subscription"
+  className="
+    flex h-11 w-11 items-center justify-center
+    rounded-full
+    bg-gradient-to-br from-blue-500 to-indigo-600
+    text-white shadow-sm
+    transition hover:scale-105 hover:shadow-md
+  "
+>
+  <CreditCard size={22} />
+</button>
 
 
           {/* MOBILE PROFILE */}
@@ -1896,103 +1927,22 @@ const handleActivateSubscription = async (publicStoreId: string) => {
                   Edit Profile
                 </button>
 
-                <button
+                
+<button
   type="button"
-  onClick={async () => {
-    setSubscriptionOpen((prev) => !prev);
-    await fetchSubscriptionStores();
+  onClick={() => {
+    setAccountModalOpen(false);
+    setSubscriptionOpen(false);
+    router.push("/business-dashboard/subscription");
   }}
-  className="flex w-full items-center justify-center gap-2 mt-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 font-semibold text-blue-600 transition hover:bg-blue-100"
+  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 font-semibold text-blue-600 transition hover:bg-blue-100"
 >
   <CreditCard size={20} />
   <span>Subscription</span>
 </button>
 
-{subscriptionOpen && (
-  <div className="mt-2 max-h-80 space-y-3 overflow-y-auto border-t border-slate-100 pt-3">
-    <p className="px-2 text-sm font-semibold text-slate-800">
-      My Stores
-    </p>
-
-    {subscriptionLoading ? (
-      <p className="px-2 py-3 text-sm text-slate-500">
-        Loading stores...
-      </p>
-    ) : subscriptionError ? (
-      <p className="px-2 py-3 text-sm text-red-600">
-        {subscriptionError}
-      </p>
-    ) : subscriptionStores.length === 0 ? (
-      <p className="px-2 py-3 text-sm text-slate-500">
-        No stores found.
-      </p>
-    ) : (
-      subscriptionStores.map((item) => {
-        const expiry = item.subscription?.expireAt;
-
-        const isActive =
-          Boolean(item.subscription?.subscriptionId) &&
-          Boolean(expiry) &&
-          new Date(expiry!).getTime() >= Date.now();
-
-        return (
-          <div
-            key={item._id}
-            className="rounded-lg border border-slate-200 bg-slate-50 p-3"
-          >
-            <p className="font-medium text-slate-900">
-              {item.storeName}
-            </p>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Store ID: {item.storeId}
-            </p>
-
-            
-<p
-  className={`mt-1 text-sm font-semibold ${
-    isActive ? "text-green-600" : "text-amber-600"
-  }`}
->
-  {isActive ? "Active Plan" : "No Active Plan"}
-</p>
-
-{expiry && (
-  <p className="mt-1 text-xs text-slate-500">
-    Expires on:{" "}
-    {new Date(expiry).toLocaleDateString("en-IN")}
-  </p>
-)}
 
 
-            {isActive ? (
-              <button
-                type="button"
-                disabled
-                className="mt-2 rounded-lg bg-green-100 px-3 py-2 text-xs font-semibold text-green-700"
-              >
-                Active Plan
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={Boolean(activatingStoreId)}
-                onClick={() =>
-                  void handleActivateSubscription(item.storeId)
-                }
-                className="mt-2 rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
-              >
-                {activatingStoreId === item.storeId
-                  ? "Activating..."
-                  : "Activate Plan"}
-              </button>
-            )}
-          </div>
-        );
-      })
-    )}
-  </div>
-)}
 
               </div>
             )}

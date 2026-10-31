@@ -39,6 +39,7 @@ import CreateWallet from "../components/stores/wallet/CreateWallet";
 import { getStoreOrders,updateOrderStatus, notifyNearbyRiders, } from "../services/orderApi";
 import DashboardSidebar from "../components/DashboardSidebar";
 import StoreSubscriptionCard from "../components/dashboard/StoreSubscriptionCard";
+import { getCurrentSubscription } from "../services/subscriptionService";
 
 const BASE_URL2 = "https://api.thover.in/v1/api";
 
@@ -192,12 +193,56 @@ const [loadingPendingOrders, setLoadingPendingOrders] = useState(false);
 const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 const [profileModalOpen, setProfileModalOpen] = useState(false);
 
+const [showPlanModal, setShowPlanModal] = useState(false);
+const [checkingPlan, setCheckingPlan] = useState(false);
+
 const [showManageStore, setShowManageStore] =
   useState(false);
 
 const [showVerification, setShowVerification] =
   useState(false);
   const router = useRouter();
+
+  
+
+const handleCreateStoreClick = async () => {
+  try {
+    setCheckingPlan(true);
+
+    const response = await getCurrentSubscription();
+
+    const subscription =
+      response?.data?.subscription ??
+      response?.data;
+
+    const isActive =
+      subscription?.status === "Active" &&
+      subscription?.paymentStatus === "paid" &&
+      subscription?.expireAt &&
+      new Date(subscription.expireAt).getTime() > Date.now();
+
+    if (response?.success && isActive) {
+      setShowPlanModal(false);
+      setShowCreateStore(true);
+    } else {
+      setShowPlanModal(true);
+    }
+  } catch (error: any) {
+    console.error(
+      "CHECK ACTIVE PLAN ERROR:",
+      error.response?.data || error.message
+    );
+
+    alert(
+      error.response?.data?.message ||
+        "Unable to check your subscription. Please try again."
+    );
+  } finally {
+    setCheckingPlan(false);
+  }
+};
+
+
 
 
 
@@ -997,37 +1042,14 @@ const getTimeAgo = (date?: string) => {
           ================================= */}
 
           <button
-            type="button"
-            onClick={() =>
-              setShowCreateStore(true)
-            }
-            className="
-              mt-12
-              flex
-              h-12
-              w-full
-              max-w-[310px]
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-blue-600
-              text-sm
-              font-semibold
-              text-white
-              transition
-
-              hover:bg-blue-700
-              active:scale-[0.98]
-            "
-          >
-            <Plus
-              size={19}
-              strokeWidth={2.5}
-            />
-
-            Create Store
-          </button>
+  type="button"
+  onClick={handleCreateStoreClick}
+  disabled={checkingPlan}
+  className="mt-12 flex h-12 w-full max-w-[310px] items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+>
+  <Plus size={19} />
+  {checkingPlan ? "Checking Plan..." : "Create Store"}
+</button>
 
         </div>
 
@@ -1528,6 +1550,44 @@ const getTimeAgo = (date?: string) => {
       window.location.reload();
     }}
   />
+)}
+
+
+{showPlanModal && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+    <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-xl">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+        <Store size={30} />
+      </div>
+
+      <h2 className="mt-4 text-xl font-bold text-gray-900">
+        Activate Your Plan First
+      </h2>
+
+      <p className="mt-2 text-sm leading-6 text-gray-600">
+        Please activate a subscription plan before creating your store.
+      </p>
+
+      <button
+        type="button"
+        onClick={() => {
+          setShowPlanModal(false);
+          router.push("/business-dashboard/plans");
+        }}
+        className="mt-6 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
+      >
+        Activate Plan
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setShowPlanModal(false)}
+        className="mt-3 w-full rounded-xl border border-gray-200 px-4 py-3 font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
 )}
 
       {/* {showCreatePost && (

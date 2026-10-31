@@ -9,23 +9,20 @@ import {
   CalendarDays,
   CheckCircle2,
   X,
+  Pencil,
 } from "lucide-react";
 import api from "../../services/api";
 
 interface Plan {
   _id: string;
   name: string;
-  description?: string;
   price: number;
   currency: string;
-
   durationMonths: number;
-
-  maxStores?: number | null;
+  maxStores: number | null;
   unlimitedStores: boolean;
-
-  maxPosts?: number;
-  features?: string[];
+  maxPosts: number;
+  features: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -33,27 +30,26 @@ interface Plan {
 
 interface CreatePlanForm {
   name: string;
-  description: string;
   price: string;
   currency: string;
-
   durationMonths: string;
-
   maxStores: string;
   unlimitedStores: boolean;
+  maxPosts: string;
+  featuresText: string;
 }
 
 const initialForm: CreatePlanForm = {
   name: "",
-  description: "",
   price: "",
   currency: "INR",
-
   durationMonths: "1",
-
   maxStores: "2",
   unlimitedStores: false,
+  maxPosts: "0",
+  featuresText: "",
 };
+
 
 export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -72,6 +68,9 @@ const [selectedPlanId, setSelectedPlanId] = useState("");
 const [activating, setActivating] = useState(false);
 const [activationSuccess, setActivationSuccess] = useState("");
 const [activationError, setActivationError] = useState("");
+const [storeSearch, setStoreSearch] = useState("");
+const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+const [updating, setUpdating] = useState(false);
 
   const [form, setForm] =
     useState<CreatePlanForm>(initialForm);
@@ -89,7 +88,7 @@ const [activationError, setActivationError] = useState("");
       setError("");
 
       const response = await api.get(
-        "https://api.thover.in/v2/api/plans/active"
+        "http://localhost:5000/v2/api/plans/active"
       );
 
       if (response.data?.success) {
@@ -127,7 +126,7 @@ const [activationError, setActivationError] = useState("");
     setActivationError("");
 
     const response = await api.get(
-      "https://api.thover.in/v1/api/admin-access/all-stores"
+      "http://localhost:5000/v1/api/admin-access/all-stores"
     );
 
     if (response.data?.success) {
@@ -152,6 +151,16 @@ const [activationError, setActivationError] = useState("");
   }
 };
 
+const filteredStores = stores.filter((store) =>
+  String(store.storeId || "")
+    .toLowerCase()
+    .includes(storeSearch.trim().toLowerCase())
+);
+const matchedStore = stores.find(
+  (store) =>
+    String(store.storeId) === storeSearch.trim()
+);
+
 
 const handleActivatePlan = async () => {
   setActivationError("");
@@ -171,7 +180,7 @@ const handleActivatePlan = async () => {
     setActivating(true);
 
     const response = await api.post(
-      `https://api.thover.in/v2/api/plans/${selectedStoreId}/activate`,
+      `http://localhost:5000/v2/api/plans/${selectedStoreId}/activate`,
       {
         planId: selectedPlanId,
       }
@@ -271,61 +280,151 @@ if (
   return;
 }
 
-    try {
-      setCreating(true);
+    
+try {
+  setCreating(true);
 
-      const response = await api.post(
-  "https://api.thover.in/v2/api/plans/",
-  {
-    name: form.name.trim(),
+  const features = form.featuresText
+    .split("\n")
+    .map((feature) => feature.trim())
+    .filter(Boolean);
 
-    description:
-      form.description.trim(),
-
-    price:
-      Number(form.price),
-
-    currency:
-      form.currency.trim().toUpperCase(),
-
-    durationMonths:
-      Number(form.durationMonths),
-
-    maxStores:
-      form.unlimitedStores
+  const response = await api.post(
+    "http://localhost:5000/v2/api/plans/",
+    {
+      name: form.name.trim(),
+      price: Number(form.price),
+      currency: form.currency.trim().toUpperCase() || "INR",
+      durationMonths: Number(form.durationMonths),
+      maxStores: form.unlimitedStores
         ? null
         : Number(form.maxStores),
-
-    unlimitedStores:
-      form.unlimitedStores,
-  }
-);
-
-      if (response.data?.success) {
-        setSuccess(
-          "Plan created successfully."
-        );
-
-        setForm(initialForm);
-
-        setShowCreateModal(false);
-
-        await fetchPlans();
-      }
-    } catch (error: any) {
-      console.error(
-        "CREATE PLAN ERROR:",
-        error
-      );
-
-      setError(
-        error?.response?.data?.message ||
-          "Failed to create plan."
-      );
-    } finally {
-      setCreating(false);
+      unlimitedStores: form.unlimitedStores,
+      maxPosts: Number(form.maxPosts),
+      features,
     }
+  );
+
+  if (response.data?.success) {
+    setSuccess("Plan created successfully.");
+    setForm(initialForm);
+    setShowCreateModal(false);
+    await fetchPlans();
+  } else {
+    setError(
+      response.data?.message || "Failed to create plan."
+    );
+  }
+} catch (error: any) {
+  console.error(
+    "CREATE PLAN ERROR:",
+    error?.response?.data || error
+  );
+
+  setError(
+    error?.response?.data?.message ||
+      "Failed to create plan."
+  );
+} finally {
+  setCreating(false);
+}
+
   };
+
+  const handleEditPlan = (plan: Plan) => {
+  setEditingPlan(plan);
+
+  setForm({
+    name: plan.name,
+    price: String(plan.price),
+    currency: plan.currency,
+    durationMonths: String(plan.durationMonths),
+    maxStores: plan.maxStores === null
+      ? ""
+      : String(plan.maxStores),
+    unlimitedStores: plan.unlimitedStores,
+    maxPosts: String(plan.maxPosts),
+    featuresText: plan.features.join("\n"),
+  });
+
+  setError("");
+  setSuccess("");
+
+  setShowCreateModal(true);
+};
+
+const handleUpdatePlan = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  setError("");
+  setSuccess("");
+
+  if (!editingPlan) return;
+
+  if (!form.name.trim()) {
+    setError("Plan name is required.");
+    return;
+  }
+
+  if (
+    !form.price ||
+    Number(form.price) < 0
+  ) {
+    setError("Please enter a valid price.");
+    return;
+  }
+
+  if (
+    !form.unlimitedStores &&
+    (!form.maxStores || Number(form.maxStores) < 1)
+  ) {
+    setError("Maximum stores must be at least 1.");
+    return;
+  }
+
+  if (
+    Number(form.durationMonths) < 1 ||
+    Number(form.durationMonths) > 12
+  ) {
+    setError("Duration must be between 1 and 12 months.");
+    return;
+  }
+
+  setUpdating(true);
+
+try {
+  const payload = {
+    name: form.name.trim(),
+    price: Number(form.price),
+    currency: form.currency,
+    durationMonths: Number(form.durationMonths),
+    maxStores: form.unlimitedStores
+      ? null
+      : Number(form.maxStores),
+    unlimitedStores: form.unlimitedStores,
+    maxPosts: Number(form.maxPosts),
+    features: form.featuresText
+      .split("\n")
+      .map((feature) => feature.trim())
+      .filter(Boolean),
+  };
+
+  await api.patch(`http://localhost:5000/v2/api/plans/${editingPlan._id}`, payload);
+
+  setSuccess("Plan updated successfully!");
+  setShowCreateModal(false);
+  setEditingPlan(null);
+  setForm(initialForm);
+
+  await fetchPlans();
+} catch (err: any) {
+  setError(
+    err.response?.data?.message || "Failed to update plan"
+  );
+} finally {
+  setUpdating(false);
+}
+};
 
   // ==========================================
   // FORMAT DATE
@@ -396,10 +495,12 @@ if (
           <button
             type="button"
             onClick={() => {
-              setError("");
-              setSuccess("");
-              setShowCreateModal(true);
-            }}
+  setEditingPlan(null);
+  setForm(initialForm);
+  setError("");
+  setSuccess("");
+  setShowCreateModal(true);
+}}
             className="flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             <Plus size={18} />
@@ -496,31 +597,45 @@ if (
         Select Store
       </label>
 
-      <select
-        value={selectedStoreId}
-        onChange={(e) => {
-          setSelectedStoreId(e.target.value);
-          setActivationError("");
-          setActivationSuccess("");
-        }}
-        disabled={storesLoading}
-        className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
-      >
-        <option value="">
-          {storesLoading
-            ? "Loading stores..."
-            : "Select Store"}
-        </option>
+      <input
+  type="text"
+  value={storeSearch}
+  onChange={(e) => {
+    const value = e.target.value;
 
-        {stores.map((store) => (
-          <option
-            key={store._id}
-            value={store.storeId}
-          >
-            {store.storeName} - {store.storeId}
-          </option>
-        ))}
-      </select>
+    setStoreSearch(value);
+    setActivationError("");
+    setActivationSuccess("");
+
+    const matched = stores.find(
+      (store) => String(store.storeId) === value.trim()
+    );
+
+    setSelectedStoreId(matched ? matched.storeId : "");
+  }}
+  placeholder="Enter Store ID..."
+  disabled={storesLoading}
+  className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+/>
+
+      {storeSearch.trim() && (
+  <div className="mt-2">
+    {matchedStore ? (
+      <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+        <p className="text-sm font-semibold text-gray-900">
+          {matchedStore.storeName}
+        </p>
+        <p className="mt-1 text-xs text-gray-600">
+          Store ID: {matchedStore.storeId}
+        </p>
+      </div>
+    ) : (
+      <p className="mt-2 text-sm text-red-500">
+        No matching store found
+      </p>
+    )}
+  </div>
+)}
     </div>
 
     {/* PLAN */}
@@ -613,9 +728,13 @@ if (
 
           <button
             type="button"
-            onClick={() =>
-              setShowCreateModal(true)
-            }
+            onClick={() => {
+  setEditingPlan(null);
+  setForm(initialForm);
+  setError("");
+  setSuccess("");
+  setShowCreateModal(true);
+}}
             className="mt-5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >
             Create Plan
@@ -633,51 +752,40 @@ if (
 
               {/* CARD HEADER */}
 
-              <div className="border-b border-gray-100 p-5">
+              <div className="flex items-start justify-between gap-3 p-5 pb-0">
 
-                <div className="flex items-start justify-between gap-3">
+  <div>
+    <h2 className="text-lg font-bold text-gray-900">
+      {plan.name}
+    </h2>
+  </div>
 
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">
-                      {plan.name}
-                    </h2>
+  <div className="flex items-center gap-2">
 
-                    {plan.description && (
-                      <p className="mt-1 text-sm text-gray-500">
-                        {plan.description}
-                      </p>
-                    )}
-                  </div>
+    <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+      plan.isActive
+        ? "bg-green-50 text-green-700"
+        : "bg-red-50 text-red-700"
+    }`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${
+        plan.isActive ? "bg-green-500" : "bg-red-500"
+      }`} />
 
-                  <span className="flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                    Active
-                  </span>
+      {plan.isActive ? "Active" : "Inactive"}
+    </span>
 
-                </div>
+    <button
+      type="button"
+      onClick={() => handleEditPlan(plan)}
+      className="flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-medium text-blue-600 hover:bg-blue-100"
+    >
+      <Pencil size={15} />
+      Edit
+    </button>
 
-                {/* PRICE */}
+  </div>
 
-                <div className="mt-5 flex items-end gap-1">
-
-                  <span className="text-3xl font-bold text-gray-900">
-                    {plan.currency === "INR"
-                      ? "₹"
-                      : plan.currency}
-
-                    {plan.price}
-                  </span>
-
-                  <span className="pb-1 text-sm text-gray-500">
-  / {plan.durationMonths}{" "}
-  {plan.durationMonths === 1
-    ? "month"
-    : "months"}
-</span>
-
-                </div>
-
-              </div>
+</div>
 
               {/* CARD BODY */}
 
@@ -701,6 +809,35 @@ if (
 </span>
 
                 </div>
+
+{/* FEATURES */}
+<div>
+  <h3 className="mb-3 text-sm font-semibold text-gray-700">
+    Included Features
+  </h3>
+
+  {plan.features?.length ? (
+    <ul className="space-y-2">
+      {plan.features.map((feature, index) => (
+        <li
+          key={`${plan._id}-feature-${index}`}
+          className="flex items-start gap-2 text-sm text-gray-600"
+        >
+          <CheckCircle2
+            size={16}
+            className="mt-0.5 shrink-0 text-green-600"
+          />
+          <span>{feature}</span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-sm text-gray-400">
+      No features added.
+    </p>
+  )}
+</div>
+
 
                 {/* {plan.maxPosts !== undefined && (
                   <div className="flex items-center justify-between">
@@ -774,20 +911,26 @@ if (
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
 
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Create Plan
-                </h2>
+                <h2 className="...">
+  {editingPlan ? "Edit Plan" : "Create Plan"}
+</h2>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Add a new subscription plan
-                </p>
+                <p className="...">
+  {editingPlan
+    ? "Update subscription plan details"
+    : "Add a new subscription plan"}
+</p>
               </div>
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowCreateModal(false)
-                }
+                onClick={() => {
+  setShowCreateModal(false);
+  setEditingPlan(null);
+  setForm(initialForm);
+  setError("");
+  setSuccess("");
+}}
                 className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               >
                 <X size={20} />
@@ -798,7 +941,7 @@ if (
             {/* FORM */}
 
             <form
-              onSubmit={handleCreatePlan}
+              onSubmit={editingPlan ? handleUpdatePlan : handleCreatePlan}
               className="space-y-5 p-6"
             >
 
@@ -825,22 +968,26 @@ if (
                 />
               </div>
 
-              {/* DESCRIPTION */}
+{/* PLAN FEATURES */}
+<div>
+  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+    Plan Features
+  </label>
 
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Description
-                </label>
+  <textarea
+    name="featuresText"
+    value={form.featuresText}
+    onChange={handleChange}
+    placeholder={"Product management\nStore analytics\nPriority support"}
+    rows={4}
+    className="w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+  />
 
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder="Best plan for growing businesses"
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
+  <p className="mt-1 text-xs text-gray-500">
+    Har feature ko alag line mein likho.
+  </p>
+</div>
+
 
               {/* PRICE + CURRENCY */}
 
@@ -963,23 +1110,30 @@ if (
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowCreateModal(false)
-                  }
+                 onClick={() => {
+  setShowCreateModal(false);
+  setEditingPlan(null);
+  setForm(initialForm);
+  setError("");
+  setSuccess("");
+}}
                   className="h-11 rounded-xl border border-gray-200 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
 
                 <button
-                  type="submit"
-                  disabled={creating}
-                  className="h-11 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {creating
-                    ? "Creating..."
-                    : "Create Plan"}
-                </button>
+  type="submit"
+  disabled={creating || updating}
+>
+  {editingPlan
+    ? updating
+      ? "Updating..."
+      : "Update Plan"
+    : creating
+      ? "Creating..."
+      : "Create Plan"}
+</button>
 
               </div>
 
