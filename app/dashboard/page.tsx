@@ -23,7 +23,7 @@ export default function DashboardPage() {
       }
 
       const response = await axios.get(
-        "https://api.thover.in/v1/api/store/my-store",
+        "http://localhost:5000/v1/api/store/my-store",
         {
           headers: {
             Authorization: `Bearer ${token}`,

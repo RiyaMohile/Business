@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://api.thover.in/v1/api";
+const BASE_URL = "http://localhost:5000/v1/api";
 
 // ==========================================
 // GET STORE ORDERS
@@ -22,7 +22,7 @@ export const getStoreOrders = async (
     }
 
     const { data } = await axios.get(
-      `https://api.thover.in/v2/api/order/store-orders`,
+      `http://localhost:5000/v2/api/order/store-orders`,
       {
         params: {
           storeId,
@@ -65,7 +65,7 @@ export const getCompletedStoreOrders = async (
     }
 
     const { data } = await axios.get(
-      `https://api.thover.in/v2/api/order/store-orders/completed`,
+      `http://localhost:5000/v2/api/order/store-orders/completed`,
       {
         params: {
           storeId,
@@ -99,7 +99,7 @@ export const searchRiders = async (
     }
 
     const { data } = await axios.get(
-      `https://api.thover.in/v1/api/order/search-riders`,
+      `http://localhost:5000/v1/api/order/search-riders`,
       {
         params: {
           ...(city ? { city } : {}),
@@ -133,7 +133,7 @@ export const notifyNearbyRiders = async (
     }
 
     const { data } = await axios.post(
-      `https://api.thover.in/v1/api/order/orders/${orderId}/notify-nearby-riders`,
+      `http://localhost:5000/v1/api/order/orders/${orderId}/notify-nearby-riders`,
       {},
       {
         headers: {

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const LOGOUT_URL =
-  "https://api.thover.in/v2/api/auth/phone/logout-user";
+  "http://localhost:5000/v2/api/auth/phone/logout-user";
 
 export const logoutUser = async (
   userId: string,

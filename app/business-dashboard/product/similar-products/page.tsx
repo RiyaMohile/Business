@@ -238,7 +238,7 @@ if (!storedMainProductId) {
         }
 
         const response = await axios.get(
-  `https://api.thover.in/v1/api/post/post/${storedMainProductId}`,
+  `http://localhost:5000/v1/api/post/post/${storedMainProductId}`,
   {
     headers: {
       Authorization: `Bearer ${token}`,

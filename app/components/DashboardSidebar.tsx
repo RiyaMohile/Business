@@ -13,8 +13,26 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getMyStores } from "@/app/services/storeApi";
 
+
+// YAHAN INTERFACES PASTE KARO
+
+interface Plan {
+  _id?: string;
+  name?: string;
+  price?: number;
+  durationMonths?: number;
+}
+
+interface PopulatedSubscription {
+  _id?: string;
+  planId?: string | Plan;
+  status?: string;
+  paymentStatus?: string;
+  expireAt?: string | Date | null;
+}
+
 interface StoreSubscription {
-  subscriptionId?: string | { _id?: string } | null;
+  subscriptionId?: string | PopulatedSubscription | null;
   expireAt?: string | Date | null;
 }
 
@@ -29,6 +47,7 @@ interface Store {
   subscription?: StoreSubscription | null;
 }
 
+// COMPONENT START
 export default function DashboardSidebar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -36,8 +55,8 @@ export default function DashboardSidebar() {
   const [isManager, setIsManager] = useState(false);
   const [hasStore, setHasStore] = useState<boolean | null>(null);
   const [hasActivePlan, setHasActivePlan] = useState(false);
-  const [selectedPublicStoreId, setSelectedPublicStoreId] =
-  useState("");
+  const [selectedPublicStoreId, setSelectedPublicStoreId] = useState("");
+  const [activePlanName, setActivePlanName] = useState("");
 
   useEffect(() => {
     const checkStoreAndRole = async () => {
@@ -51,6 +70,7 @@ export default function DashboardSidebar() {
           setHasStore(false);
           setIsManager(false);
           setHasActivePlan(false);
+          setActivePlanName("");
           return;
         }
 
@@ -64,6 +84,7 @@ export default function DashboardSidebar() {
           setHasStore(false);
           setIsManager(false);
           setHasActivePlan(false);
+          setActivePlanName("");
           return;
         }
 
@@ -73,6 +94,7 @@ export default function DashboardSidebar() {
           setHasStore(false);
           setIsManager(false);
           setHasActivePlan(false);
+          setActivePlanName("");
           return;
         }
 
@@ -81,6 +103,7 @@ export default function DashboardSidebar() {
         if (!selectedStoreId) {
           setIsManager(false);
           setHasActivePlan(false);
+          setActivePlanName("");
           return;
         }
 
@@ -94,11 +117,34 @@ if (!selectedStore) {
   setIsManager(false);
   setHasActivePlan(false);
   setSelectedPublicStoreId("");
+  setActivePlanName("");
   return;
 }
 
 // Public/business Store ID — MongoDB _id nahi
 setSelectedPublicStoreId(selectedStore.storeId || "");
+
+// DEBUG: Selected Store Subscription Details
+const subscriptionData =
+  typeof selectedStore.subscription?.subscriptionId === "object" &&
+  selectedStore.subscription.subscriptionId !== null
+    ? selectedStore.subscription.subscriptionId
+    : null;
+
+const planData =
+  typeof subscriptionData?.planId === "object" &&
+  subscriptionData.planId !== null
+    ? subscriptionData.planId
+    : null;
+
+console.log("SELECTED STORE SUBSCRIPTION:", {
+  storeMongoId: selectedStore._id,
+  publicStoreId: selectedStore.storeId,
+  subscriptionId: subscriptionData?._id,
+  planId: planData?._id,
+  planName: planData?.name,
+  expireAt: selectedStore.subscription?.expireAt,
+});
 
         // Check manager role
         const member = selectedStore.users?.find((item) => {
@@ -115,29 +161,45 @@ setSelectedPublicStoreId(selectedStore.storeId || "");
 
         setIsManager(member?.role === "manager");
 
-        // Check subscription for selected store
-        const subscription = selectedStore.subscription;
-        const subscriptionId =
-          typeof subscription?.subscriptionId === "object"
-            ? subscription.subscriptionId?._id
-            : subscription?.subscriptionId;
+       // Check subscription for selected store
+const subscription = selectedStore.subscription;
 
-        const expireAt = subscription?.expireAt
-          ? new Date(subscription.expireAt).getTime()
-          : 0;
+// const subscriptionData =
+//   typeof subscription?.subscriptionId === "object" &&
+//   subscription.subscriptionId !== null
+//     ? subscription.subscriptionId
+//     : null;
 
-        const active =
-          Boolean(subscriptionId) &&
-          Boolean(expireAt) &&
-          !Number.isNaN(expireAt) &&
-          expireAt >= Date.now();
+const subscriptionId = subscriptionData?._id;
 
-        setHasActivePlan(active);
+const expireAt = subscription?.expireAt
+  ? new Date(subscription.expireAt).getTime()
+  : 0;
+
+const active =
+  Boolean(subscriptionId) &&
+  Boolean(expireAt) &&
+  !Number.isNaN(expireAt) &&
+  expireAt >= Date.now();
+
+setHasActivePlan(active);
+
+// Get active plan name
+// const planData =
+//   typeof subscriptionData?.planId === "object" &&
+//   subscriptionData.planId !== null
+//     ? subscriptionData.planId
+//     : null;
+
+setActivePlanName(
+  active ? planData?.name || "" : ""
+);
       } catch (error) {
         console.error("SIDEBAR CHECK ERROR:", error);
         setHasStore(false);
         setIsManager(false);
         setHasActivePlan(false);
+        setActivePlanName("");
       }
     };
 
@@ -262,19 +324,21 @@ setSelectedPublicStoreId(selectedStore.storeId || "");
           </p>
 
           <p
-            className={`mt-1 text-sm font-bold ${
-              hasActivePlan
-                ? "text-emerald-700"
-                : "text-amber-700"
-            }`}
-          >
-            {hasActivePlan ? "Active Plan" : "No Active Plan"}
-          </p>
+  className={`mt-1 text-sm font-bold ${
+    hasActivePlan
+      ? "text-emerald-700"
+      : "text-amber-700"
+  }`}
+>
+  {hasActivePlan
+    ? activePlanName || "Active Plan"
+    : "No Active Plan"}
+</p>
 
           {!hasActivePlan && (
             <button
               type="button"
-              onClick={() => handleNavigation("/business-dashboard/plans")}
+              onClick={() => handleNavigation("/business-dashboard/subscription")}
               className="mt-3 w-full rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
             >
               Choose Subscription Plan

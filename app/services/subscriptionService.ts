@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://api.thover.in";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const subscriptionApi = axios.create({
   baseURL: `${API_BASE_URL}/v2/api`,
@@ -63,6 +63,26 @@ export interface VerifySubscriptionPaymentPayload {
   razorpay_payment_id: string;
   razorpay_signature: string;
 }
+export interface AssignedStore {
+  _id: string;
+  storeId: string;
+  storeName: string;
+}
+
+export interface AvailableSubscription {
+  subscriptionId: string;
+  planId: string;
+  planName: string;
+  price: number;
+  currency: string;
+  durationMonths: number;
+  expireAt: string;
+  maxStores: number | null;
+  unlimitedStores: boolean;
+  usedStores: number;
+  remainingStores: number | null;
+  assignedStores: AssignedStore[];
+}
 
 // GET all available subscription plans
 export const getAvailableSubscriptionPlans = async () => {
@@ -75,6 +95,7 @@ export const createSubscriptionOrder = async (
   storeId: string,
   planId: string
 ): Promise<CreateSubscriptionOrderResponse> => {
+  
   const response = await subscriptionApi.post(
     "/subscriptions/create-order",
     {
@@ -101,9 +122,54 @@ export const verifySubscriptionPayment = async (
 
 export const getCurrentSubscription = async () => {
   const response = await subscriptionApi.get(
-    "https://api.thover.in/v1/api/subscription/current"
+    "http://localhost:5000/v1/api/subscription/current"
   );
 
   return response.data;
 };
 
+// GET available existing subscriptions
+export const getAvailableSubscriptions = async () => {
+  const response = await subscriptionApi.get(
+    "/subscriptions/available-for-store"
+  );
+
+  return response.data;
+};
+
+// POST assign existing subscription to another store
+export const assignStoreToSubscription = async (
+  subscriptionId: string,
+  storeId: string
+) => {
+  const response = await subscriptionApi.post(
+    "/subscriptions/assign-store",
+    {
+      subscriptionId,
+      storeId,
+    }
+  );
+
+  return response.data;
+};
+
+// Active Subscription Interface
+export interface ActiveSubscription {
+  subscriptionId: string;
+  planId: string;
+  planName: string;
+  expireAt: string;
+  maxStores: number | null;
+  unlimitedStores: boolean;
+  features: string[];
+  assignedStores: AssignedStore[];
+}
+
+// GET my active subscriptions
+export const getMyActiveSubscriptions = async () => {
+  const response = await subscriptionApi.get(
+    "/subscriptions/my-active"
+  );
+
+  return response.data;
+};

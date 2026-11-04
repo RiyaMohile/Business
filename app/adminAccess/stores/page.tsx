@@ -91,7 +91,7 @@ const [showStoreDashboard, setShowStoreDashboard] = useState(false);
         // -----------------------------------------------
 
         const adminResponse = await api.get(
-          "https://api.thover.in/v1/api/thover-admin/my-access"
+          "http://localhost:5000/v1/api/thover-admin/my-access"
         );
 
         console.log(
@@ -144,7 +144,7 @@ if (adminData?.isSuperAdmin === true) {
 
         
 const storesResponse = await api.get(
-  "https://api.thover.in/v1/api/admin-access/all-stores"
+  "http://localhost:5000/v1/api/admin-access/all-stores"
 );
 
 setStores(storesResponse.data?.stores || []);
@@ -265,7 +265,7 @@ const saveSelectedStores = async () => {
   try {
     setSavingStores(true);
 
-    await api.patch("https://api.thover.in/v1/api/admin-access/select-stores", {
+    await api.patch("http://localhost:5000/v1/api/admin-access/select-stores", {
       managedStoreIds: selectedStoreIds,
     });
 

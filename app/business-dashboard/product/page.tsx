@@ -264,7 +264,7 @@ useEffect(() => {
       }
 
       const { data } = await axios.get(
-        "https://api.thover.in/v1/api/auth/me",
+        "http://localhost:5000/v1/api/auth/me",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -609,7 +609,7 @@ const isAllSelected =
     }
 
     const response = await axios.patch(
-  "https://api.thover.in/v2/api/post/bulk-archive",
+  "http://localhost:5000/v2/api/post/bulk-archive",
   {
     postIds: selectedProductIds,
     isArchived: activeTab === "Active",
@@ -680,7 +680,7 @@ const handleBulkDelete = async () => {
     }
 
     const response = await axios.delete(
-      "https://api.thover.in/v2/api/post/bulk-delete",
+      "http://localhost:5000/v2/api/post/bulk-delete",
       {
         data: {
           postIds: selectedProductIds,

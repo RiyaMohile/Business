@@ -87,7 +87,7 @@ export default function CreateStoreDialog({
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "https://api.thover.in/v1/api/store/create",
+        "http://localhost:5000/v1/api/store/create",
         {
           email: form.email,
           address: form.address,

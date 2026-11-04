@@ -146,7 +146,7 @@ export default function AdminPostDetailsPage() {
       console.log("Fetching post:", postId);
 
       const { data } = await api.get(
-        `https://api.thover.in/v1/api/admin-access/posts/${postId}`
+        `http://localhost:5000/v1/api/admin-access/posts/${postId}`
       );
 
       console.log(

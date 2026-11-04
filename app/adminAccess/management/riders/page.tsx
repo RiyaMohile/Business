@@ -57,7 +57,7 @@ interface RiderResponse {
 
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://api.thover.in";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // Change this path if your router is mounted elsewhere.
 const REPORT_URL = `${API_URL}/v1/api/rider/admin/report`;

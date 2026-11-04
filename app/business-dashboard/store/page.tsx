@@ -76,7 +76,7 @@ function StorePageContent() {
     }
 
     const { data } = await axios.get(
-      "https://api.thover.in/v2/api/store/my-stores",
+      "http://localhost:5000/v2/api/store/my-stores",
       {
         headers: {
           Authorization: `Bearer ${token}`,

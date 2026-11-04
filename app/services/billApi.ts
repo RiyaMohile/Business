@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://api.thover.in/v1/api";
+const BASE_URL = "http://localhost:5000/v1/api";
 
 export interface BillProduct {
   _id: string;
@@ -51,7 +51,7 @@ export const searchProductByNumber = async (
     }
 
     const response = await axios.get(
-      `https://api.thover.in/v2/api/post/search-product-by-number`,
+      `http://localhost:5000/v2/api/post/search-product-by-number`,
       {
         params: {
           productNumber: productNumber.trim().toUpperCase(),
@@ -119,7 +119,7 @@ export const createOfflineBill = async (
     }
 
     const response = await axios.post(
-      `https://api.thover.in/v1/api/bill/offline`,
+      `http://localhost:5000/v1/api/bill/offline`,
       payload,
       {
         headers: {

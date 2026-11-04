@@ -159,7 +159,7 @@ export default function ManagementPage() {
 
 
 {/* RIDER MANAGEMENT */}
-<button
+{/* <button
   type="button"
   onClick={() =>
     router.push("/adminAccess/management/riders")
@@ -185,7 +185,7 @@ export default function ManagementPage() {
     View riders, check online status, filter by location
     and date, and manage rider reports.
   </p>
-</button>
+</button> */}
 
 
 {/* PLANS & SUBSCRIPTIONS */}

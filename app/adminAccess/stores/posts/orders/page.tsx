@@ -111,7 +111,7 @@ export default function AdminPostOrdersPage() {
       setError("");
 
       const { data } = await api.get(
-        `https://api.thover.in/v1/api/admin-access/stores/${storeId}/orders`,
+        `http://localhost:5000/v1/api/admin-access/stores/${storeId}/orders`,
         {
           params: {
             postId,

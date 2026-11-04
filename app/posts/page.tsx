@@ -51,7 +51,7 @@ const [tags, setTags] = useState("");
       setLoading(true);
 
       const { data } = await axios.get(
-        "https://api.thover.in/v1/api/post/all-posts"
+        "http://localhost:5000/v1/api/post/all-posts"
       );
 
       setPosts(data.posts);
@@ -93,7 +93,7 @@ const [tags, setTags] = useState("");
     const token = localStorage.getItem("token");
 
     await axios.patch(
-      `https://api.thover.in/v1/api/admin/admin-suspend-post/${selectedPost._id}`,
+      `http://localhost:5000/v1/api/admin/admin-suspend-post/${selectedPost._id}`,
       {
         status: "suspended",
         reason,
@@ -125,7 +125,7 @@ const deletePost = async () => {
     const token = localStorage.getItem("token");
 
     await axios.delete(
-      `https://api.thover.in/v1/api/admin/admin-delete-post/${selectedPost._id}`,
+      `http://localhost:5000/v1/api/admin/admin-delete-post/${selectedPost._id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -157,7 +157,7 @@ const addTag = async () => {
     const token = localStorage.getItem("token");
 
     await axios.post(
-      "https://api.thover.in/v1/api/admin/admin-add-post-tags",
+      "http://localhost:5000/v1/api/admin/admin-add-post-tags",
       {
         postId: selectedPost._id,
         tag,
@@ -199,7 +199,7 @@ const updateTags = async () => {
       .filter(Boolean);
 
     await axios.post(
-      "https://api.thover.in/v1/api/admin/admin-update-post-tags",
+      "http://localhost:5000/v1/api/admin/admin-update-post-tags",
       {
         postId: selectedPost._id,
         tags: tagArray,

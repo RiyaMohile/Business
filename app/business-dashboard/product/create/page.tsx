@@ -410,7 +410,7 @@ console.log("IDEAL FOR:", idealFor);
 console.log("=====================================");
 
     const response = await axios.post(
-      "https://api.thover.in/v2/api/post/addPost",
+      "http://localhost:5000/v2/api/post/addPost",
       payload,
       {
         headers: {
@@ -442,7 +442,7 @@ console.log("=====================================");
     });
 
     const response = await axios.post(
-      `https://api.thover.in/v1/api/post/add-media/${postId}`,
+      `http://localhost:5000/v1/api/post/add-media/${postId}`,
       formData,
       {
         headers: {

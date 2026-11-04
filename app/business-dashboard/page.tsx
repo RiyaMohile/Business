@@ -41,7 +41,7 @@ import DashboardSidebar from "../components/DashboardSidebar";
 import StoreSubscriptionCard from "../components/dashboard/StoreSubscriptionCard";
 import { getCurrentSubscription } from "../services/subscriptionService";
 
-const BASE_URL2 = "https://api.thover.in/v1/api";
+const BASE_URL2 = "http://localhost:5000/v1/api";
 
 interface User {
   _id: string;
@@ -499,7 +499,7 @@ const handleNotifyRiders = async (orderId: string) => {
     }
 
     const { data } = await axios.get(
-      "https://api.thover.in/v1/api/auth/me",
+      "http://localhost:5000/v1/api/auth/me",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -614,7 +614,7 @@ const handleNotifyRiders = async (orderId: string) => {
     }
 
     const { data } = await axios.get(
-      `https://api.thover.in/v1/api/post/user/${userId}/posts`,
+      `http://localhost:5000/v1/api/post/user/${userId}/posts`,
       {
         params: {
           page: 1,
@@ -666,7 +666,7 @@ const toggleArchive = async (postId: string) => {
     }
 
     const { data } = await axios.patch(
-      `https://api.thover.in/v1/api/post/toggle-archive/${postId}`,
+      `http://localhost:5000/v1/api/post/toggle-archive/${postId}`,
       {},
       {
         headers: {
@@ -716,7 +716,7 @@ const toggleArchive = async (postId: string) => {
 //     }
 
 //     const response = await axios.get(
-//       "https://api.thover.in/v1/api/store/my-store",
+//       "http://localhost:5000/v1/api/store/my-store",
 //       {
 //         headers: {
 //           Authorization: `Bearer ${token}`,

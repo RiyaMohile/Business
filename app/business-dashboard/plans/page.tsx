@@ -292,11 +292,11 @@ if (!window.Razorpay) {
       ? "Unlimited"
       : plan.maxStores ?? "Not specified"}
   </li>
-
+{/* 
   <li>
     <span className="font-medium">Posts:</span>{" "}
     {plan.maxPosts ?? 0}
-  </li>
+  </li> */}
 
   {(plan.features ?? []).length > 0 ? (
     plan.features.map((feature, index) => (

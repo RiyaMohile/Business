@@ -25,52 +25,68 @@ export default function StoreSubscriptionCard() {
   const [selectedStoreId, setSelectedStoreId] = useState("");
 
   const checkSubscription = useCallback(async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const storeId = localStorage.getItem("selectedStoreId") || "";
-      setSelectedStoreId(storeId);
+    const storedSelectedId =
+      localStorage.getItem("selectedStoreId") || "";
 
-      if (!storeId) {
-        setHasActivePlan(false);
-        return;
-      }
-
-      const response = await getMyStores();
-
-      const stores: StoreData[] = Array.isArray(response?.stores)
-        ? response.stores
-        : [];
-
-      const selectedStore = stores.find(
-        (item) =>
-          item._id === storeId || item.storeId === storeId
-      );
-
-      const subscription = selectedStore?.subscription;
-
-      const subscriptionId =
-        typeof subscription?.subscriptionId === "object"
-          ? subscription.subscriptionId?._id
-          : subscription?.subscriptionId;
-
-      const expiryTime = subscription?.expireAt
-        ? new Date(subscription.expireAt).getTime()
-        : NaN;
-
-      const active =
-        Boolean(subscriptionId) &&
-        Number.isFinite(expiryTime) &&
-        expiryTime >= Date.now();
-
-      setHasActivePlan(active);
-    } catch (error) {
-      console.error("SUBSCRIPTION CHECK ERROR:", error);
+    if (!storedSelectedId) {
+      setSelectedStoreId("");
       setHasActivePlan(false);
-    } finally {
-      setLoading(false);
+      return;
     }
-  }, []);
+
+    const response = await getMyStores();
+
+    const stores: StoreData[] = Array.isArray(response?.stores)
+      ? response.stores
+      : [];
+
+    // Find store using MongoDB _id OR custom storeId
+    const selectedStore = stores.find(
+      (item) =>
+        item._id?.toString() === storedSelectedId.toString() ||
+        item.storeId?.toString() === storedSelectedId.toString()
+    );
+
+    if (!selectedStore) {
+      setSelectedStoreId("");
+      setHasActivePlan(false);
+      return;
+    }
+
+    // Always use custom/public storeId
+    const publicStoreId = selectedStore.storeId || "";
+
+    setSelectedStoreId(publicStoreId);
+
+    const subscription = selectedStore.subscription;
+
+    const subscriptionId =
+      typeof subscription?.subscriptionId === "object"
+        ? subscription.subscriptionId?._id
+        : subscription?.subscriptionId;
+
+    const expiryTime = subscription?.expireAt
+      ? new Date(subscription.expireAt).getTime()
+      : NaN;
+
+    const active =
+      Boolean(subscriptionId) &&
+      Number.isFinite(expiryTime) &&
+      expiryTime >= Date.now();
+
+    setHasActivePlan(active);
+
+  } catch (error) {
+    console.error("SUBSCRIPTION CHECK ERROR:", error);
+    setSelectedStoreId("");
+    setHasActivePlan(false);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     checkSubscription();

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_ORIGIN = "https://api.thover.in";
+const API_ORIGIN = "http://localhost:5000";
 
 export type ReturnStatus = "requested" | "completed" | "rejected";
 

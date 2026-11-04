@@ -31,10 +31,10 @@ export default function WalletTable({
   onTake,
 }: Props) {
   return (
-    <div className="mt-8 w-full overflow-hidden rounded-2xl bg-white shadow">
+    <div className="mt-2 w-full overflow-hidden rounded-2xl bg-white shadow ">
 
       {/* Table scroll area */}
-      <div className="max-h-[calc(100vh-280px)] w-full overflow-auto">
+      <div className="max-h-[calc(100vh-280px)] w-full overflow-auto ">
 
         <table className="min-w-[800px] w-full">
 

@@ -246,7 +246,7 @@
 //   };
 
 //   const response = await axios.post(
-//     "https://api.thover.in/v1/api/post/addPost",
+//     "http://localhost:5000/v1/api/post/addPost",
 //     payload,
 //     {
 //       headers: {
@@ -278,7 +278,7 @@
 //   });
 
 //   const response = await axios.post(
-//     `https://api.thover.in/v1/api/post/add-media/${postId}`,
+//     `http://localhost:5000/v1/api/post/add-media/${postId}`,
 //     formData,
 //     {
 //       headers: {

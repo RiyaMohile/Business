@@ -87,7 +87,7 @@ const fetchPosts = useCallback(async () => {
     setSuccess("");
 
     const url = new URL(
-      "https://api.thover.in/v2/api/post/all-posts"
+      "http://localhost:5000/v2/api/post/all-posts"
     );
 
     if (city.trim()) {
@@ -211,7 +211,7 @@ const handleUpload = async (postId: string) => {
     const token = localStorage.getItem("token");
 
     const response = await fetch(
-      `https://api.thover.in/v1/api/admin-access/posts/${encodeURIComponent(postId)}/media`,
+      `http://localhost:5000/v1/api/admin-access/posts/${encodeURIComponent(postId)}/media`,
       {
         method: "POST",
         headers: token
@@ -263,7 +263,7 @@ const handleUpload = async (postId: string) => {
     }
 
     const response = await fetch(
-      `https://api.thover.in/v2/api/post/posts/${encodeURIComponent(postId)}/media/${encodeURIComponent(media._id)}/download`,
+      `http://localhost:5000/v2/api/post/posts/${encodeURIComponent(postId)}/media/${encodeURIComponent(media._id)}/download`,
       {
         method: "GET",
         headers: {

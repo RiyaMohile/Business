@@ -151,7 +151,7 @@ const [subscriptionError, setSubscriptionError] = useState("");
       }
 
       const { data } = await axios.get(
-        "https://api.thover.in/v1/api/auth/me",
+        "http://localhost:5000/v1/api/auth/me",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -409,7 +409,7 @@ const [subscriptionError, setSubscriptionError] = useState("");
     setEditLoading(true);
 
     const response = await axios.put(
-      "https://api.thover.in/v1/api/user/complete-profile",
+      "http://localhost:5000/v1/api/user/complete-profile",
       {
         name: editName.trim(),
         username: editUsername.trim(),
@@ -465,7 +465,7 @@ const [subscriptionError, setSubscriptionError] = useState("");
       }
 
       const { data } = await axios.get(
-        `https://api.thover.in/v1/api/user/details/${user._id}`,
+        `http://localhost:5000/v1/api/user/details/${user._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -581,7 +581,7 @@ const handleActivateSubscription = async (publicStoreId: string) => {
     }
 
     const { data } = await axios.post(
-      `https://api.thover.in/v2/api/plans/${encodeURIComponent(
+      `http://localhost:5000/v2/api/plans/${encodeURIComponent(
         publicStoreId
       )}/activate-my-store`,
       {},
@@ -1933,12 +1933,12 @@ const handleActivateSubscription = async (publicStoreId: string) => {
   onClick={() => {
     setAccountModalOpen(false);
     setSubscriptionOpen(false);
-    router.push("/business-dashboard/subscription");
+    router.push("/business-dashboard/active-plans");
   }}
   className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 font-semibold text-blue-600 transition hover:bg-blue-100"
 >
   <CreditCard size={20} />
-  <span>Subscription</span>
+  <span>Active Plans</span>
 </button>
 
 

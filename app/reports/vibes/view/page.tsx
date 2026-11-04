@@ -34,7 +34,7 @@ const id = searchParams.get("id");
       const token = localStorage.getItem("token");
 
       const { data } = await axios.get(
-        `https://api.thover.in/v1/api/admin/reports/vibe/${id}`,
+        `http://localhost:5000/v1/api/admin/reports/vibe/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

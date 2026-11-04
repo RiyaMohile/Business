@@ -88,7 +88,7 @@ export default function BillsPage() {
       if (billType) params.billType = billType;
 
       const response = await axios.get(
-        `https://api.thover.in/v1/api/bill/store/${storeId}`,
+        `http://localhost:5000/v1/api/bill/store/${storeId}`,
         {
           params,
           headers: {

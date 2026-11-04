@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE_URL = "https://api.thover.in/v1/api";
+const BASE_URL = "http://localhost:5000/v1/api";
 
 // These slugs must match the values accepted by your backend route:
 // GET /about/page/:pageName

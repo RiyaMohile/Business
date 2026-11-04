@@ -21,7 +21,7 @@ export interface Category {
 
 export const getAllCategories = async () => {
   const { data } = await api.get(
-    "https://api.thover.in/v1/api/category/all"
+    "http://localhost:5000/v1/api/category/all"
   );
 
   return data;
@@ -39,7 +39,7 @@ export const addCategory = async (payload: {
   examples?: string[];
 }) => {
   const { data } = await api.post(
-    "https://api.thover.in/v1/api/category/add",
+    "http://localhost:5000/v1/api/category/add",
     payload
   );
 
@@ -57,7 +57,7 @@ export const deleteCategory = async (
   subCategory: string
 ) => {
   const { data } = await api.delete(
-    "https://api.thover.in/v1/api/category/delete",
+    "http://localhost:5000/v1/api/category/delete",
     {
       data: {
         category,
@@ -87,7 +87,7 @@ export const updateCategoryMedia = async (
   formData.append("media", file);
 
   const { data } = await api.put(
-    "https://api.thover.in/v1/api/category/update-media",
+    "http://localhost:5000/v1/api/category/update-media",
     formData
   );
 

@@ -50,7 +50,7 @@ if (!storeId) {
 }
 
 const { data } = await api.get(
-  `https://api.thover.in/v1/api/admin-access/stores/${storeId}`
+  `http://localhost:5000/v1/api/admin-access/stores/${storeId}`
 );
 
 console.log("Store response:", data);

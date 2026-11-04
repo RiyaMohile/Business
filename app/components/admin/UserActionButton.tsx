@@ -63,7 +63,7 @@ export default function UserActionButton({
     setCreating(true);
 
     await api.post(
-      "https://api.thover.in/v1/api/thover-admin/create",
+      "http://localhost:5000/v1/api/thover-admin/create",
       {
         userId: id,
         permissions: {
@@ -104,7 +104,7 @@ export default function UserActionButton({
   const removeAdmin = async () => {
   try {
     await api.delete(
-      "https://api.thover.in/v1/api/thover-admin/delete",
+      "http://localhost:5000/v1/api/thover-admin/delete",
       {
         data: {
           userId: id,

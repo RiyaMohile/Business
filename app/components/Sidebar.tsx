@@ -140,7 +140,7 @@ export default function Sidebar() {
         );
 
         const response = await api.get(
-          "https://api.thover.in/v1/api/thover-admin/my-access"
+          "http://localhost:5000/v1/api/thover-admin/my-access"
         );
 
         
