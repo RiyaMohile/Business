@@ -2,7 +2,7 @@
 "use client";
 
 import Script from "next/script";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createSubscriptionOrder,
@@ -42,6 +42,9 @@ function PlansContent() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<
+  "all" | "monthly" | "quarterly" | "yearly"
+>("all");
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -75,6 +78,23 @@ function PlansContent() {
   useEffect(() => {
     void fetchPlans();
   }, [fetchPlans]);
+
+
+
+  const filteredPlans = useMemo(() => {
+  if (selectedFilter === "all") return plans;
+
+  const durationMap = {
+    monthly: 1,
+    quarterly: 3,
+    yearly: 12,
+  };
+
+  return plans.filter(
+    (plan) => plan.durationMonths === durationMap[selectedFilter]
+  );
+}, [plans, selectedFilter]);
+
 
   const handleBuyPlan = async (plan: SubscriptionPlan) => {
 //     if (!storeId) {
@@ -235,6 +255,32 @@ if (!window.Razorpay) {
             </div>
           )}
 
+          {!loading && plans.length > 0 && (
+  <div className="mb-8 flex flex-wrap justify-center gap-3">
+
+    {[
+      { label: "All Plans", value: "all" },
+      { label: "Monthly", value: "monthly" },
+      { label: "Quarterly", value: "quarterly" },
+      { label: "Yearly", value: "yearly" },
+    ].map((filter) => (
+      <button
+        key={filter.value}
+        type="button"
+        onClick={() => setSelectedFilter(filter.value as typeof selectedFilter)}
+        className={`rounded-full border px-6 py-2.5 text-sm font-semibold transition ${
+          selectedFilter === filter.value
+            ? "border-purple-600 bg-purple-600 text-white shadow-md"
+            : "border-slate-200 bg-white text-slate-600 hover:border-purple-500 hover:text-purple-600"
+        }`}
+      >
+        {filter.label}
+      </button>
+    ))}
+
+  </div>
+)}
+
           {loading ? (
             <div className="py-16 text-center text-slate-600">
               Loading subscription plans...
@@ -255,9 +301,18 @@ if (!window.Razorpay) {
                 Retry
               </button>
             </div>
-          ) : (
+          ) : filteredPlans.length === 0 ? (
+  <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
+    <h2 className="text-lg font-semibold text-slate-800">
+      No {selectedFilter} plans available
+    </h2>
+    <p className="mt-2 text-sm text-slate-500">
+      Please select another subscription duration.
+    </p>
+  </div>
+) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {plans.map((plan) => (
+             {filteredPlans.map((plan) => (
                 <div
                   key={plan._id}
                   className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"

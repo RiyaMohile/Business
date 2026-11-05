@@ -442,37 +442,41 @@ const saveSelectedStores = async () => {
 </div>
 
 
-        {/* ============================================= */}
-        {/* ADMIN INFO */}
-        {/* ============================================= */}
+        
+{/* ADMIN INFO CARDS */}
+<div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+  {/* Access Type */}
+  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <p className="text-sm text-gray-500">Access Type</p>
+    <div className="mt-2 flex items-center gap-2">
+      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+        <StoreIcon size={19} />
+      </span>
+      <h3 className="text-lg font-semibold text-gray-900">
+        {admin?.isSuperAdmin ? "Super Admin" : "Admin"}
+      </h3>
+    </div>
+  </div>
 
-            <div>
-              <p className="text-sm text-gray-500">
-                Access Type
-              </p>
+  {/* Accessible Stores */}
+  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <p className="text-sm text-gray-500">Accessible Stores</p>
+    <h3 className="mt-2 text-2xl font-bold text-gray-900">
+      {visibleStores.length}
+    </h3>
+  </div>
 
-              <p className="mt-1 text-lg font-semibold text-gray-900">
-                {admin?.isSuperAdmin
-                  ? "Super Admin"
-                  : "Admin"}
-              </p>
-            </div>
+  {/* Weekly Orders */}
+  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <p className="text-sm text-gray-500">No. of Orders This Week</p>
+    <h3 className="mt-2 text-2xl font-bold text-gray-900">
+      28
+    </h3>
+  </div>
 
-            <div>
-              <p className="text-sm text-gray-500">
-                Accessible Stores
-              </p>
+</div>
 
-              <p className="mt-1 text-lg font-semibold text-gray-900">
-                {visibleStores.length}
-              </p>
-            </div>
-
-          </div>
-        </div>
 
         {/* ============================================= */}
         {/* SEARCH */}
