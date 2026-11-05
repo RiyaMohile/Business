@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
+import { disconnectSocket } from "../services/socketService";
 import {
   User,
   Shield,
@@ -174,6 +175,7 @@ const [subscriptionError, setSubscriptionError] = useState("");
       );
 
       if (error.response?.status === 401) {
+        disconnectSocket();
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("selectedStoreId");

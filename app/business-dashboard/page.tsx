@@ -36,6 +36,7 @@ import ViewStore from "../components/store/steps/ViewStore";
 import StoreCreationSuccess from "../components/store/StoreCreationSuccess";
 import MobileDashboardNav from "../components/dashboard/MobileDashboardNav";
 import CreateWallet from "../components/stores/wallet/CreateWallet";
+import { onOrderEvent } from "../services/socketService";
 import { getStoreOrders,updateOrderStatus, notifyNearbyRiders, } from "../services/orderApi";
 import DashboardSidebar from "../components/DashboardSidebar";
 import StoreSubscriptionCard from "../components/dashboard/StoreSubscriptionCard";
@@ -345,7 +346,20 @@ useEffect(() => {
     handleStoreChange
   );
 
+  // Real-time: refresh on new/updated orders and after every reconnect.
+  const unsubscribeSocket = onOrderEvent(() => {
+    fetchOrderDashboard();
+    fetchPendingOrders();
+  });
+
+  // Slow fallback in case a socket event is missed.
+  const pollTimer = setInterval(() => {
+    fetchPendingOrders();
+  }, 30000);
+
   return () => {
+    unsubscribeSocket();
+    clearInterval(pollTimer);
     window.removeEventListener(
       "selectedStoreChanged",
       handleStoreChange

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { disconnectSocket } from "./socketService";
 
 const LOGOUT_URL =
   "http://localhost:5000/v2/api/auth/phone/logout-user";
@@ -27,6 +28,9 @@ export const logoutUser = async (
         data?.message || "Unable to logout."
       );
     }
+
+    // Drop the real-time connection before clearing the session
+    disconnectSocket();
 
     // Remove only login/session data
     localStorage.removeItem("token");

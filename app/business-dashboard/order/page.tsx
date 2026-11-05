@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { onOrderEvent } from "../../services/socketService";
 import { getStoreOrders, cancelOrderByStore, notifyNearbyRiders,updateOrderStatus,getCompletedStoreOrders } from "../../services/orderApi";
 import { useRouter } from "next/navigation";
 
@@ -139,9 +140,9 @@ useEffect(() => {
   // ==========================================
 
 useEffect(() => {
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError("");
 
       // ==============================
@@ -232,7 +233,20 @@ console.log("================================");
     handleStoreChange
   );
 
+  // Real-time: refetch whenever the server reports an order change
+  // (also fires on every socket reconnect).
+  const unsubscribeSocket = onOrderEvent(() => {
+    fetchOrders(true);
+  });
+
+  // Slow fallback in case a socket event is missed.
+  const pollTimer = setInterval(() => {
+    fetchOrders(true);
+  }, 30000);
+
   return () => {
+    unsubscribeSocket();
+    clearInterval(pollTimer);
     window.removeEventListener(
       "selectedStoreChanged",
       handleStoreChange

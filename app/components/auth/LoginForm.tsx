@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import api from "../../services/api";
+import { connectSocket } from "../../services/socketService";
 import AlertBox from "../common/AlertBox";
 import { useAlert } from "../../hooks/useAlert";
 import { registerDevice } from "../../services/deviceApi";
@@ -102,6 +103,8 @@ if (!deviceId) {
     if (data.userId) {
       localStorage.setItem("userId", data.userId);
     }
+
+    connectSocket();
 
     // Go to business dashboard
     router.replace("/business-dashboard");
